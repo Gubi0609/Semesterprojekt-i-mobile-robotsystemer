@@ -1,6 +1,7 @@
 # Semesterprojekt-i-mobile-robotsystemer
 
 ## Developers
-- (github.com/Gubi0609)[August Tranberg]
-- (github.com/AsmusRise)[Asmus Rise]
-- 
+- [Asmus Rise](github.com/AsmusRise)
+- [August Tranberg](github.com/Gubi0609)
+- [Elias Alstrup](github.com/sputnikboi)
+- [Emil Gramstrup](github.com/EmilGrams)
