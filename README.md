@@ -5,3 +5,4 @@
 - [August Tranberg](https://github.com/Gubi0609)
 - [Elias Alstrup](https://github.com/Sputnikboi)
 - [Emil Gramstrup](https://github.com/EmilGrams)
+- [Frederik Wilkens](https://github.com/FrederikWilkens)
