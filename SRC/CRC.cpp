@@ -143,21 +143,19 @@ bool CRC::verify(uint16_t received) {
     return (temp & 0xF) == 0;
 }
 
-vector<uint16_t> CRC::decode1612(vector<uint16_t> encodedBinaryData) {
+uint16_t CRC::decode1612(uint16_t encodedBinaryData) {
     
-    vector<uint16_t> decodedData;
+    
+    // Check CRC first
+    bool isValid = verify(encodedBinaryData);
 
-    for(int i = 0; i < encodedBinaryData.size(); i++) {
-        // Check CRC first
-        bool isValid = verify(encodedBinaryData[i]);
-
+    if (isValid) {
         // Extract 12-bit data regardless
-        uint16_t data = (encodedBinaryData[i] >> 4) & 0x0FFF;
-
-        decodedData.push_back(data);
+        return (encodedBinaryData >> 4) & 0x0FFF;
+    } else {
+        return 0x0000;
     }
 
-    return decodedData;
 }
 
 CRC::~CRC() {}

@@ -20,7 +20,7 @@ class CRC {
 
         vector<uint16_t> encode1216(vector<uint16_t> splitBinaryData);
         bool verify(uint16_t encodedBinaryData);
-        vector<uint16_t> decode1612(vector<uint16_t> encodedBinaryData);
+        uint16_t decode1612(uint16_t encodedBinaryData);
 
         ~CRC();
 

@@ -8,6 +8,8 @@ int main() {
 
     CRC crc;
 
+    cout << "--- Split data --- " << endl; 
+
     vector<int> binaryData = {1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1};
     // vector<int> binaryData = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28};
 
@@ -19,6 +21,8 @@ int main() {
         }
         cout << endl;
     }
+
+    cout << "--- Convert to bin ---" << endl;
 
     vector<uint16_t> binData;
 
@@ -32,13 +36,27 @@ int main() {
         cout << binData[i] << endl;
     }
 
+    cout << "--- Encoding data ---" << endl;
+
     vector<uint16_t> encodedData = crc.encode1216(binData);
 
     for(int i = 0; i < encodedData.size(); i++) {
         cout << encodedData[i] << endl;
     }
 
-    vector<uint16_t> decodedData = crc.decode1612(encodedData);
+    cout << "--- Adding incorrect value ---" << endl;
+
+    encodedData.push_back(0x1A9C);
+
+    cout << "--- Decoding data ---" << endl;
+
+    vector<uint16_t> decodedData;
+    
+    for(int i = 0; i < encodedData.size(); i++) {
+        uint16_t temp = crc.decode1612(encodedData[i]);
+
+        decodedData.push_back(temp);
+    }
 
     for(int i = 0; i < decodedData.size(); i++) {
         cout << decodedData[i] << endl;
