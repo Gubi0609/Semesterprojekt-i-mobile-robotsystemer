@@ -89,6 +89,9 @@ Records 5 seconds of audio to `out.mp3` by default.
 
 # Custom parameters
 ./frequency_detector -sr 48000 -fft 8192 -peaks 10
+
+# Use bandpass filter to focus on specific frequency range
+./frequency_detector -low 800 -high 1200
 ```
 
 **Options:**
@@ -98,6 +101,8 @@ Records 5 seconds of audio to `out.mp3` by default.
 	- 4096 = ~12 Hz resolution, balanced
 	- 8192 = ~6 Hz resolution, best accuracy
 - `-peaks <n>` - Number of peaks to display (default: 5)
+- `-low <freq>` - Bandpass filter low cutoff in Hz (optional)
+- `-high <freq>` - Bandpass filter high cutoff in Hz (optional)
 - `-h, --help` - Show help
 
 **Example Output:**
@@ -107,6 +112,7 @@ Records 5 seconds of audio to `out.mp3` by default.
 	Sample Rate: 48000 Hz
 	FFT Size: 4096
 	Frequency Resolution: 11.7 Hz
+	Bandpass Filter: 800 - 1200 Hz
 ========================================
 Press Ctrl+C to stop...
 
@@ -151,6 +157,32 @@ Dominant Frequencies: 1000.0 Hz (100%) | 2000.0 Hz (45%) | 3000.0 Hz (23%)
 ./frequency_detector -fft 8192  # Higher FFT size to resolve close frequencies
 ```
 
+### Test 4: Bandpass Filter
+
+**Terminal 1:**
+```bash
+./tones 500 1000 5000 -d 60  # Three frequencies
+```
+
+**Terminal 2:**
+```bash
+# Only detect frequencies around 1000 Hz, ignore 500 and 5000 Hz
+./frequency_detector -low 800 -high 1200
+```
+
+### Test 5: Narrow Band Detection
+
+**Terminal 1:**
+```bash
+./tones 1000 -d 60
+```
+
+**Terminal 2:**
+```bash
+# Very narrow filter to isolate specific frequency
+./frequency_detector -low 950 -high 1050 -fft 8192
+```
+
 ## How It Works
 
 ### Frequency Detector
@@ -158,16 +190,24 @@ Dominant Frequencies: 1000.0 Hz (100%) | 2000.0 Hz (45%) | 3000.0 Hz (23%)
 The frequency detector uses the following technique:
 
 1. **Audio Capture**: Streams audio from microphone using PortAudio
-2. **Windowing**: Applies Hann window to reduce spectral leakage
-3. **FFT**: Performs Fast Fourier Transform using FFTW3
-4. **Peak Detection**: Identifies local maxima in frequency spectrum
-5. **Display**: Shows top N frequencies with their relative magnitudes
+2. **Bandpass Filter** (optional): Filters audio to specific frequency range using biquad filter
+3. **Windowing**: Applies Hann window to reduce spectral leakage
+4. **FFT**: Performs Fast Fourier Transform using FFTW3
+5. **Peak Detection**: Identifies local maxima in frequency spectrum
+6. **Display**: Shows top N frequencies with their relative magnitudes
 
 **Key Features:**
 - Real-time processing with low latency
+- Optional bandpass filter to focus on specific frequency ranges
 - Overlapping windows for smooth detection
 - Automatic peak finding with threshold
 - Frequency resolution = Sample Rate / FFT Size
+
+**Bandpass Filter:**
+- Uses 2nd order biquad filter design
+- Filters audio before FFT analysis
+- Reduces noise and unwanted frequencies
+- Useful for isolating specific tones or frequency bands
 
 ### FFT Size Selection
 
