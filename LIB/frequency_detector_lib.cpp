@@ -278,9 +278,18 @@ private:
 		}
 
 		const double threshold = maxMag * 0.1;
-		const int minBin = static_cast<int>(20.0 / freqPerBin);
 
-		for (int i = minBin + 1; i < numBins - 1; ++i) {
+		// Set frequency range for peak detection
+		int minBin = static_cast<int>(20.0 / freqPerBin);
+		int maxBin = numBins - 1;
+
+		// If bandpass filter is enabled, only look within that frequency range
+		if (useBandpass_ && config_.bandpassLow > 0 && config_.bandpassHigh > 0) {
+			minBin = std::max(minBin, static_cast<int>(config_.bandpassLow / freqPerBin));
+			maxBin = std::min(maxBin, static_cast<int>(config_.bandpassHigh / freqPerBin));
+		}
+
+		for (int i = minBin + 1; i < maxBin - 1; ++i) {
 			if (magnitudes[i] > magnitudes[i-1] &&
 				magnitudes[i] > magnitudes[i+1] &&
 				magnitudes[i] > threshold)

@@ -226,9 +226,18 @@ private:
 
 		// Find peaks (local maxima with significant magnitude)
 		const double threshold = maxMag * 0.1;  // 10% of max
-		const int minBin = static_cast<int>(20.0 / freqPerBin);  // ignore below 20 Hz
 
-		for (int i = minBin + 1; i < numBins - 1; ++i) {
+		// Set frequency range for peak detection
+		int minBin = static_cast<int>(20.0 / freqPerBin);  // ignore below 20 Hz
+		int maxBin = numBins - 1;
+
+		// If bandpass filter is enabled, only look within that frequency range
+		if (useBandpass_ && bandpassLow_ > 0 && bandpassHigh_ > 0) {
+			minBin = std::max(minBin, static_cast<int>(bandpassLow_ / freqPerBin));
+			maxBin = std::min(maxBin, static_cast<int>(bandpassHigh_ / freqPerBin));
+		}
+
+		for (int i = minBin + 1; i < maxBin - 1; ++i) {
 			// Check if this is a local maximum
 			if (magnitudes[i] > magnitudes[i-1] &&
 				magnitudes[i] > magnitudes[i+1] &&
