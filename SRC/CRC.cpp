@@ -3,6 +3,12 @@
 #include <bits/stdc++.h>
 #include <iostream>
 
+/*
+TODO
+- [ ] Function to gather 12 bit binary again in long vector
+- [ ] Other return type from decode1612 (nullptr?)
+*/
+
 CRC::CRC() {}
 
 CRC::CRC(vector<int> denominator) {
