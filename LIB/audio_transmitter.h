@@ -34,13 +34,16 @@ public:
 
 	// Start transmitting a 4-bit value (0-15)
 	// Returns true on success
-	bool startTransmitting(uint8_t value, const Config& config = Config());
+	bool startTransmitting(uint8_t value, const Config& config);
+	bool startTransmitting(uint8_t value); // Use default config
 
 	// Start transmitting asynchronously
 	// Callback is called when transmission completes (if duration > 0)
 	bool startTransmittingAsync(uint8_t value,
-								const Config& config = Config(),
+								const Config& config,
 								std::function<void()> onComplete = nullptr);
+	bool startTransmittingAsync(uint8_t value,
+								std::function<void()> onComplete = nullptr); // Use default config
 
 	// Stop transmission
 	void stop();
@@ -86,13 +89,16 @@ public:
 
 	// Start transmitting a 16-bit value (0-65535)
 	// Returns true on success
-	bool startTransmitting(uint16_t value, const Config& config = Config());
+	bool startTransmitting(uint16_t value, const Config& config);
+	bool startTransmitting(uint16_t value); // Use default config
 
 	// Start transmitting asynchronously
 	// Callback is called when transmission completes (if duration > 0)
 	bool startTransmittingAsync(uint16_t value,
-								const Config& config = Config(),
+								const Config& config,
 								std::function<void()> onComplete = nullptr);
+	bool startTransmittingAsync(uint16_t value,
+								std::function<void()> onComplete = nullptr); // Use default config
 
 	// Stop transmission
 	void stop();
