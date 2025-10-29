@@ -61,7 +61,6 @@ int main() {
         } else {
             errorBlocks.push_back(i);
         }
-
     }
 
     if(!errorBlocks.empty()) {
@@ -86,13 +85,7 @@ int main() {
         cout << endl;
     }
 
-    vector<int> gatheredDecodedData;
-
-    for(int i = 0; i < decodedSplitData.size(); i++) {
-        for(int j = 0; j < decodedSplitData[i].size(); j++) {
-            gatheredDecodedData.push_back(decodedSplitData[i][j]);
-        }
-    }
+    vector<int> gatheredDecodedData = crc.gather12(decodedSplitData);
 
     for(int i = 0; i < gatheredDecodedData.size(); i++) {
         cout << gatheredDecodedData[i] << " ";
