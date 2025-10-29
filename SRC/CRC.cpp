@@ -15,35 +15,6 @@ CRC::CRC(vector<int> denominator) {
     this->denominator = denominator;
 }
 
-vector<vector<int>> CRC::split8(vector<int> binaryData) {
-    vector<vector<int>> splitBinary;
-
-    for(int i = binaryData.size() - 1; i >= 0;) {
-        vector<int> group;
-
-        for(int j = 0; j < 8 && i>=0; j++, i--) {
-            
-            group.push_back(binaryData[i]);
-        }
-
-        reverse(group.begin(), group.end());
-        splitBinary.push_back(group);
-    }
-
-    reverse(splitBinary.begin(), splitBinary.end());
-
-    if(!splitBinary.empty() && splitBinary[0].size() < 8) {
-        int spacesMissing = 8 - splitBinary[0].size();
-
-        for (int i = 0; i < spacesMissing; i++) {
-            splitBinary[0].insert(splitBinary[0].begin(), 0);
-        }
-    }
-
-    return splitBinary;
-
-}
-
 vector<vector<int>> CRC::split12(vector<int> binaryData) {
     vector<vector<int>> splitBinary;
 
@@ -73,6 +44,19 @@ vector<vector<int>> CRC::split12(vector<int> binaryData) {
 
 }
 
+vector<int> CRC::gather12(vector<vector<int>> splitBinaryData) {
+
+    vector<int> gatheredBinaryData;
+
+    for(int i = 0; i < splitBinaryData.size(); i++) {
+        for(int j = 0; j < splitBinaryData[i].size(); j++) {
+            gatheredBinaryData.push_back(splitBinaryData[i][j]);
+        }
+    }
+
+    return gatheredBinaryData;
+}
+
 uint16_t CRC::vec2bin(vector<int> binaryData) {
     
    
@@ -89,14 +73,15 @@ uint16_t CRC::vec2bin(vector<int> binaryData) {
    
 }
 
-vector<int> CRC::bin2vec(uint16_t binaryData) {
+vector<int> CRC::bin2vec(uint16_t binaryData, int bitLength) {
  
     vector<int> bits;
+    bits.reserve(bitLength);
 
-    for (int j = 15; j >= 0; --j) {
+    for (int j = bitLength - 1; j >= 0; --j) {
         bits.push_back((binaryData >> j) & 1);
     }
-    
+
     return bits;
     
 }
@@ -149,19 +134,15 @@ bool CRC::verify(uint16_t received) {
     return (temp & 0xF) == 0;
 }
 
-uint16_t CRC::decode1612(uint16_t encodedBinaryData) {
-    
-    
-    // Check CRC first
+optional<uint16_t> CRC::decode1612(uint16_t encodedBinaryData) {
     bool isValid = verify(encodedBinaryData);
 
-    if (isValid) {
-        // Extract 12-bit data regardless
-        return (encodedBinaryData >> 4) & 0x0FFF;
-    } else {
-        return 0x0000;
-    }
+    if (!isValid)
+        return nullopt; // indicates error
 
+    uint16_t extractedData = (encodedBinaryData >> 4) & 0x0FFF;
+    return extractedData; // return by value
 }
+
 
 CRC::~CRC() {}

@@ -51,14 +51,56 @@ int main() {
     cout << "--- Decoding data ---" << endl;
 
     vector<uint16_t> decodedData;
+    vector<int> errorBlocks;
     
     for(int i = 0; i < encodedData.size(); i++) {
-        uint16_t temp = crc.decode1612(encodedData[i]);
+        auto temp = crc.decode1612(encodedData[i]);
 
-        decodedData.push_back(temp);
+        if(temp != nullopt) {
+            decodedData.push_back(*temp);
+        } else {
+            errorBlocks.push_back(i);
+        }
+
+    }
+
+    if(!errorBlocks.empty()) {
+        // Do some error handling
+        cout << "ERROR DETECTED IN " << errorBlocks.size() << " BLOCKS!" << endl;
     }
 
     for(int i = 0; i < decodedData.size(); i++) {
         cout << decodedData[i] << endl;
     }
+
+    vector<vector<int>> decodedSplitData;
+
+    for(int i = 0; i < decodedData.size(); i++) {
+        decodedSplitData.push_back(crc.bin2vec(decodedData[i]));
+    }
+
+    for (int i = 0; i < decodedSplitData.size(); i++) {
+        for (int j = 0; j < decodedSplitData[i].size(); j++) {
+            cout << decodedSplitData[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    vector<int> gatheredDecodedData;
+
+    for(int i = 0; i < decodedSplitData.size(); i++) {
+        for(int j = 0; j < decodedSplitData[i].size(); j++) {
+            gatheredDecodedData.push_back(decodedSplitData[i][j]);
+        }
+    }
+
+    for(int i = 0; i < gatheredDecodedData.size(); i++) {
+        cout << gatheredDecodedData[i] << " ";
+    }
+    cout << endl;
+    for(int i = 0; i < binaryData.size(); i++) {
+        cout << binaryData[i] << " ";
+    }
+    cout << endl;
+    
 }
