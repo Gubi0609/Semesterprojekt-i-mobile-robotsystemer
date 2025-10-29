@@ -31,22 +31,23 @@ class RB3_cpp_publisher : public rclcpp::Node{
       msg.twist.linear.x = provider_->getVel();
       msg.twist.angular.z = provider_->getRot();
     } else {
+
+      //if Provider is not created, the robot will stop and give logger info
       msg.twist.angular.x = 0;
       msg.twist.angular.y = 0;
-      msg.twist.angular.z = this->rand_FloatRange(0,2.84);
+      msg.twist.angular.z = 0;
 
-      msg.twist.linear.x = this->rand_FloatRange(0,0.22);
+      msg.twist.linear.x = 0;
       msg.twist.linear.y = 0;
       msg.twist.linear.z = 0;
+
+      //added debugging
+      RCLCPP_DEBUG(this->get_logger(), "publish_vel debug: provider not found. Publishing zero velocities.");
+
     }
 
     RCLCPP_INFO(this->get_logger(), "Publishing: %f , %f", this->msg.twist.linear.x, this->msg.twist.angular.z);
     publisher_->publish(msg);
-  }
-
-  float rand_FloatRange(float a, float b)
-  {
-    return ((b - a) * ((float)rand() / RAND_MAX)) + a;
   }
 
   rclcpp::TimerBase::SharedPtr timer_;
@@ -61,7 +62,7 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   // create the provider from other file and inject it
-  auto provider = std::make_shared<OtherClass>(); // ensure OtherClass is visible here (include its header)
+  auto provider = std::make_shared<VelocityProvider>(); // ensure OtherClass is visible here (include its header)
   rclcpp::spin(std::make_shared<RB3_cpp_publisher>(provider));
 
   rclcpp::shutdown();

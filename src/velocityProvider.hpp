@@ -5,17 +5,11 @@
 class VelocityProvider {
 public:
     virtual ~VelocityProvider() = default;
-    virtual float getVel() = 0; //return linear x
-    virtual float getRot() = 0; //return angular z
-};
-
-//OtherClass declared so other transllation units can create it
-class OtherClass : public VelocityProvider {
-public:
-	OtherClass();
-	float getVel() override;
-	float getRot() override;
+    float getVel(); //return linear x
+    float getRot(); //return angular z
+    void setVel(float f);
+    void setRot(float f);
 private:
-	float linear_x_;
-	float angular_z_;
+    float linear_x_;
+    float angular_z_;
 };

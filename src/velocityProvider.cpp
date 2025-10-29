@@ -1,23 +1,24 @@
 #include "velocityProvider.hpp"
 #include <cstdlib>
 
-OtherClass::OtherClass()
+VelocityProvider::VelocityProvider()
 : linear_x_(0.0f), angular_z_(0.0f)
 {}
 
-float OtherClass::getVel() {
-	// update internal state here
-	linear_x_ = 0.1f;
+float VelocityProvider::getVel() {
 	return linear_x_;
 }
 
-float OtherClass::getRot(){
-	angular_z_ = 0.0f;
+float VelocityProvider::getRot(){
 	return angular_z_;
 }
-        // Make random numner between a and b
-float rand_FloatRange(float a, float b)
-    {
-        return ((b - a) * ((float)rand() / RAND_MAX)) + a;
-    }
+
+void VelocityProvider::setVel(float f){
+	linear_x_ = f;
+}
+
+void VelocityProvider::setRot(float f){
+	angular_z_ = f;
+}
+
 
