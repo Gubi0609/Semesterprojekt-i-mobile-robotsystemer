@@ -4,6 +4,7 @@
 
 class VelocityProvider {
 public:
+	VelocityProvider();
     virtual ~VelocityProvider() = default;
     float getVel(); //return linear x
     float getRot(); //return angular z
