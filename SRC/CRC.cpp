@@ -18,7 +18,7 @@ vector<vector<int>> CRC::split(vector<int> binaryData, int desiredLength) {
     /*
     Splits a long vector in to elements of desiredLength, starting from LSB (the back).
     :param binaryData: Datavector to be split
-    :param desiredLength: Desired length of the processed binary vectors.
+    :param desiredLength: Desired length of the processed binary vectors. Default = 12
     :return: Binary data split in to lengths of desiredLength
     */
 
