@@ -11,10 +11,10 @@ class CRC {
 
     public:
         CRC();
-        CRC(vector<int> denominator);
+        CRC(vector<int> generatorKey);
 
-        vector<vector<int>> split12(vector<int> binaryData);
-        vector<int> gather12(vector<vector<int>> splitBinaryData);
+        vector<vector<int>> split(vector<int> binaryData, int desiredLength = 12);
+        vector<int> gather(vector<vector<int>> splitBinaryData);
 
         uint16_t vec2bin(vector<int> binaryData);
         vector<int> bin2vec(uint16_t binaryData, int bitLength = 12);
@@ -26,7 +26,7 @@ class CRC {
         ~CRC();
 
     protected:
-        vector<int> denominator = {1, 0, 0, 1, 1};
+        vector<int> generatorKey = {1, 0, 0, 1, 1};
 
 };
 
