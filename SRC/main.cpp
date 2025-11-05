@@ -12,7 +12,6 @@
 int main(int argc, char* argv[]) {
     
     // Command line argument check
-    
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <value>\n";
         std::cerr << "  value: 12-bit unsigned integer (0-4095)\n\n";

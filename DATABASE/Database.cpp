@@ -2,10 +2,8 @@
 #include <sqlite3.h>
 #include <iostream>
 
-using namespace std;
-
 // Constructor: store the database filename
-Database::Database(const string& filename) : db(nullptr), filename(filename) {}
+Database::Database(const std::string& filename) : db(nullptr), filename(filename) {}
 
 // Destructor: ensure the database is closed
 Database::~Database() { close(); }
@@ -15,8 +13,8 @@ bool Database::open() {
     if (sqlite3_open(filename.c_str(), reinterpret_cast<sqlite3**>(&db)) == SQLITE_OK) {
         return true; // success
     } else {
-        cerr << "Failed to open database: " 
-                  << sqlite3_errmsg(reinterpret_cast<sqlite3*>(db)) << endl;
+        std::cerr << "Failed to open database: " 
+                  << sqlite3_errmsg(reinterpret_cast<sqlite3*>(db)) << std::endl;
         return false;
     }
 }
@@ -30,10 +28,10 @@ void Database::close() {
 }
 
 // Execute a SQL command (e.g., CREATE TABLE, INSERT)
-bool Database::execute(const string& sql) {
+bool Database::execute(const std::string& sql) {
     char* errMsg = nullptr;
     if (sqlite3_exec(reinterpret_cast<sqlite3*>(db), sql.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK) {
-        cerr << "SQL error: " << errMsg << endl;
+        std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
         return false;
     }
@@ -41,8 +39,8 @@ bool Database::execute(const string& sql) {
 }
 
 // Execute a SQL query that returns rows (SELECT)
-vector<vector<string>> Database::query(const string& sql) {
-    vector<vector<string>> results;
+std::vector<std::vector<std::string>> Database::query(const std::string& sql) {
+    std::vector<std::vector<std::string>> results;
     sqlite3_stmt* stmt;
 
     // Prepare the SQL statement
@@ -51,7 +49,7 @@ vector<vector<string>> Database::query(const string& sql) {
 
         // Iterate over each row
         while (sqlite3_step(stmt) == SQLITE_ROW) {
-            vector<string> row;
+            std::vector<std::string> row;
             for (int i = 0; i < cols; ++i) {
                 const char* val = reinterpret_cast<const char*>(sqlite3_column_text(stmt, i));
                 row.push_back(val ? val : ""); // convert NULL to empty string
@@ -59,8 +57,8 @@ vector<vector<string>> Database::query(const string& sql) {
             results.push_back(row);
         }
     } else {
-        cerr << "Failed to execute query: "
-                  << sqlite3_errmsg(reinterpret_cast<sqlite3*>(db)) << endl;
+        std::cerr << "Failed to execute query: "
+                  << sqlite3_errmsg(reinterpret_cast<sqlite3*>(db)) << std::endl;
     }
 
     sqlite3_finalize(stmt); // clean up
@@ -69,7 +67,7 @@ vector<vector<string>> Database::query(const string& sql) {
 
 // Create the PC and PI tables if they do not exist
 bool Database::createTables() {
-    string sql_pc = R"(
+    std::string sql_pc = R"(
         CREATE TABLE IF NOT EXISTS pc_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             command TEXT,
@@ -80,7 +78,7 @@ bool Database::createTables() {
         );
     )";
 
-    string sql_pi = R"(
+    std::string sql_pi = R"(
         CREATE TABLE IF NOT EXISTS pi_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             bits_encoded TEXT,
@@ -95,35 +93,35 @@ bool Database::createTables() {
 }
 
 // Insert a new record into the PC table
-bool Database::insertPC(const string& command,
-                        const string& bits_raw,
-                        const string& bits_encoded,
+bool Database::insertPC(const std::string& command,
+                        const std::string& bits_raw,
+                        const std::string& bits_encoded,
                         double speed,
                         double duration) {
-    string sql = "INSERT INTO pc_data (command, bits_raw, bits_encoded, speed, duration) VALUES ('" +
+    std::string sql = "INSERT INTO pc_data (command, bits_raw, bits_encoded, speed, duration) VALUES ('" +
                       command + "', '" + bits_raw + "', '" + bits_encoded + "', " +
-                      to_string(speed) + ", " + to_string(duration) + ");";
+                      std::to_string(speed) + ", " + std::to_string(duration) + ");";
     return execute(sql);
 }
 
 // Insert a new record into the PI table
-bool Database::insertPI(const string& bits_encoded,
-                        const string& bits_decoded,
-                        const string& command,
+bool Database::insertPI(const std::string& bits_encoded,
+                        const std::string& bits_decoded,
+                        const std::string& command,
                         double speed,
                         double duration) {
-    string sql = "INSERT INTO pi_data (bits_encoded, bits_decoded, command, speed, duration) VALUES ('" +
+    std::string sql = "INSERT INTO pi_data (bits_encoded, bits_decoded, command, speed, duration) VALUES ('" +
                       bits_encoded + "', '" + bits_decoded + "', '" + command + "', " +
-                      to_string(speed) + ", " + to_string(duration) + ");";
+                      std::to_string(speed) + ", " + std::to_string(duration) + ");";
     return execute(sql);
 }
 
 // Fetch all records from the PC table
-vector<vector<string>> Database::getAllPC() {
+std::vector<std::vector<std::string>> Database::getAllPC() {
     return query("SELECT * FROM pc_data;");
 }
 
 // Fetch all records from the PI table
-vector<vector<string>> Database::getAllPI() {
+std::vector<std::vector<std::string>> Database::getAllPI() {
     return query("SELECT * FROM pi_data;");
 }
