@@ -27,18 +27,28 @@ float VelocityProvider::getRot(){
 }
 
 void VelocityProvider::setVel(float f){
-	if(f>0.22) f=0.22;
-	if(f<0) f =0.0f;
+	// Expect input f in range [0 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
+	if(f > INPUT_MAX_LINEAR) f = INPUT_MAX_LINEAR;
+	if(f < INPUT_MIN_LINEAR) f = INPUT_MIN_LINEAR;
 
-	linear_x_ = f;
+	// scale: physical = (input / INPUT_MAX_LINEAR) * PHYS_MAX_LINEAR
+	linear_x_ = (f / INPUT_MAX_LINEAR) * PHYS_MAX_LINEAR;
 }
 
 void VelocityProvider::setRot(float f){
-	angular_z_ = f;
+	// Expect input f in range [-100 .. 100]. Map to physical range [-PHYS_MAX_ROT .. PHYS_MAX_ROT].
+	if(f > INPUT_MAX_ROT) f = INPUT_MAX_ROT;
+	if(f < INPUT_MIN_ROT) f = INPUT_MIN_ROT;
+
+	// scale: physical = (input / INPUT_MAX_ROT) * PHYS_MAX_ROT
+	angular_z_ = (f / INPUT_MAX_ROT) * PHYS_MAX_ROT;
 }
 
 void VelocityProvider::driveForDuration(int duration, float velocity){
-	durationVelocity = velocity;
+	// velocity is given in input range [0 .. 100], map to physical
+	if(velocity > INPUT_MAX_LINEAR) velocity = INPUT_MAX_LINEAR;
+	if(velocity < INPUT_MIN_LINEAR) velocity = INPUT_MIN_LINEAR;
+	durationVelocity = (velocity / INPUT_MAX_LINEAR) * PHYS_MAX_LINEAR;
 	end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(duration);
 	state_ = State::DURATION;
 }
