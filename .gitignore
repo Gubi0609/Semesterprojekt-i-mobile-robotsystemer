@@ -1,4 +1,5 @@
 **/.vscode/**
 **/BUILD/**
-**/*.db/**
+**/DOCS/**
+**/.db/**
 SRC/Makefile
