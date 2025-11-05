@@ -1,0 +1,50 @@
+These are the accepted commands and their functions:
+
+DRIVE_FORWARD           Drives forward with set linear speed.
+DRIVE_FOR_DURATION      Drives forward with set linear speed for set duration.
+TURN_IN_PLACE           Turns in place with set rotational speed.
+TURN_WITh_ARC           Turns while driving forward creating an arc.
+SEND                    Sends your command stack.
+
+HELP                    Shows this help page.
+
+For help on specific functions, use HELP on said function.
+---
+
+DRIVE_FORWARD HELP
+    Input parameters
+        <linear_speed>      Speed at which to drive forward.
+            Type: float
+            Range: 0 to 100
+---
+
+
+DRIVE_FOR_DURATION HELP
+    Input parameters
+        <linear_speed>      Speed at which to drive forward.
+            Type: float
+            Range: 0 to 100
+
+        <duration>  Duration in seconds.
+            Type: float
+---
+
+TURN_IN_PLACE HELP
+    Input parameters
+        <rotation_speed>    Speed at which to turn. 
+            Type: float
+            Range: -100 to 100. 
+            Negative is Left, positive is Right.
+---
+
+TURN_WITh_ARC HELP
+    Input parameters
+        <linear_speed>      Speed at which to drive forward.
+            Type: float
+            Range: 0 to 100
+
+        <rotation_speed>    Speed at which to turn. 
+            Type: float
+            Range: -100 to 100. 
+            Negative is Left, positive is Right.
+---
