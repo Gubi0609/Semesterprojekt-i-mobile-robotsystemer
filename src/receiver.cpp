@@ -50,6 +50,7 @@ int main() {
 	// Initialize CRC with default generator key
 	CRC crc;
 
+	float currentSignal;
 	// Robot state
 	RobotState currentState = RobotState::IDLE;
 	std::cout << "Initial robot state: " << stateToString(currentState) << "\n\n";
