@@ -1,0 +1,219 @@
+================================================================================
+VOICE RECEIVER - ROS2 INTEGRATION QUICK START
+================================================================================
+
+This file contains the steps needed to integrate voice_receiver.cpp with ROS2
+for production use on the robot.
+
+================================================================================
+STEP 1: MODIFY COMPILE FLAGS
+================================================================================
+
+Edit src/voice_receiver.cpp and change:
+
+	#define TEST_MODE true
+
+to:
+
+	#define TEST_MODE false
+
+
+================================================================================
+STEP 2: UNCOMMENT ROS2 INCLUDES
+================================================================================
+
+In voice_receiver.cpp, uncomment these lines (near top of file):
+
+	// ROS2 includes (commented out for test mode)
+	// #include "rclcpp/rclcpp.hpp"
+	// #include "geometry_msgs/msg/twist_stamped.hpp"
+
+Change to:
+
+	// ROS2 includes
+	#include "rclcpp/rclcpp.hpp"
+	#include "geometry_msgs/msg/twist_stamped.hpp"
+
+
+================================================================================
+STEP 3: IMPLEMENT ROS2 PUBLISHER IN ROBOTCOMMANDER
+================================================================================
+
+In the RobotCommander class, uncomment and complete the ROS2 code:
+
+A) Add member variable for the node and publisher:
+
+	private:
+		rclcpp::Node::SharedPtr node_;
+		rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+
+B) Modify the constructor to initialize ROS2:
+
+	RobotCommander() {
+	#if TEST_MODE
+		cout << ">>> TEST MODE: Commands will be printed to terminal <<<\n\n";
+	#else
+		// Initialize ROS2 node
+		node_ = rclcpp::Node::make_shared("voice_command_controller");
+
+		// Create publisher for /cmd_vel
+		publisher_ = node_->create_publisher<geometry_msgs::msg::TwistStamped>(
+			"/cmd_vel", 10);
+
+		cout << ">>> ROS2 MODE: Commands will be published to /cmd_vel <<<\n\n";
+	#endif
+	}
+
+C) Modify publishCommand() to actually publish:
+
+	void publishCommand(float linear_x, float angular_z) {
+	#if TEST_MODE
+		// Test mode - print to terminal
+		cout << "  [CMD] linear.x: " << fixed << setprecision(2) << linear_x
+			 << " m/s, angular.z: " << angular_z << " rad/s\n";
+	#else
+		// ROS2 mode - publish to /cmd_vel
+		geometry_msgs::msg::TwistStamped msg;
+		msg.header.stamp = node_->get_clock()->now();
+		msg.header.frame_id = "base_link";
+		msg.twist.linear.x = linear_x;
+		msg.twist.linear.y = 0.0;
+		msg.twist.linear.z = 0.0;
+		msg.twist.angular.x = 0.0;
+		msg.twist.angular.y = 0.0;
+		msg.twist.angular.z = angular_z;
+		publisher_->publish(msg);
+	#endif
+	}
+
+
+================================================================================
+STEP 4: INITIALIZE ROS2 IN MAIN
+================================================================================
+
+In main(), uncomment the ROS2 initialization:
+
+	#else
+		// Production mode - use Vosk + ROS2
+		rclcpp::init(argc, argv);
+		voskVoiceInput();
+		rclcpp::shutdown();
+	#endif
+
+
+================================================================================
+STEP 5: ADD ROS2 SPINNING (OPTIONAL BUT RECOMMENDED)
+================================================================================
+
+For proper ROS2 operation, you may want to spin the node periodically.
+Add this to the main loop in voskVoiceInput():
+
+	// After creating RobotCommander
+	RobotCommander commander;
+
+	// In the main while(running) loop, add periodic spinning:
+	#if !TEST_MODE
+		rclcpp::spin_some(commander.getNode());
+	#endif
+
+And add a getter method to RobotCommander:
+
+	rclcpp::Node::SharedPtr getNode() { return node_; }
+
+
+================================================================================
+STEP 6: UPDATE MAKEFILE FOR ROS2 DEPENDENCIES
+================================================================================
+
+The Makefile will need ROS2 compile and link flags. Update the voice_receiver
+target in SRC/Makefile:
+
+	# Get ROS2 flags
+	ROS2_CFLAGS := $(shell pkg-config --cflags rclcpp geometry_msgs)
+	ROS2_LIBS := $(shell pkg-config --libs rclcpp geometry_msgs)
+
+	voice_receiver: $(PI_SRC_DIR)/voice_receiver.cpp | $(BUILD_DIR)
+		$(CXX) $(CXXFLAGS) $(ROS2_CFLAGS) -I/usr/local/include \
+			-o $(BUILD_DIR)/voice_receiver $(PI_SRC_DIR)/voice_receiver.cpp \
+			-L/usr/local/lib -lvosk $(LIBS_PORTAUDIO) $(ROS2_LIBS)
+
+NOTE: Only compile with ROS2 flags when TEST_MODE is false, otherwise you
+don't need ROS2 installed.
+
+
+================================================================================
+STEP 7: BUILD WITH ROS2
+================================================================================
+
+Make sure ROS2 is sourced:
+
+	source /opt/ros/humble/setup.bash  # or your ROS2 distro
+
+	cd SRC
+	make voice_receiver
+
+
+================================================================================
+STEP 8: RUN WITH ROS2
+================================================================================
+
+Source ROS2 environment and run:
+
+	source /opt/ros/humble/setup.bash
+	cd BUILD
+	./voice_receiver
+
+The program will now:
+- Listen for voice commands
+- Parse them into robot states
+- Publish TwistStamped messages to /cmd_vel
+- Control the robot through rb3_node_cpp
+
+
+================================================================================
+VERIFICATION
+================================================================================
+
+In another terminal, verify messages are being published:
+
+	source /opt/ros/humble/setup.bash
+	ros2 topic echo /cmd_vel
+
+You should see velocity messages when you give voice commands.
+
+Check that rb3_node_cpp is running and receiving commands:
+
+	ros2 node list
+	ros2 topic info /cmd_vel
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Issue: "undefined reference to rclcpp::..."
+Fix: Make sure ROS2 is sourced and pkg-config can find rclcpp
+
+Issue: Publisher not created
+Fix: Verify ROS2 node initialization happens before creating publisher
+
+Issue: Messages not received by rb3_node_cpp
+Fix: Check that both nodes are on the same ROS_DOMAIN_ID and network
+
+Issue: Compilation fails with ROS2 headers
+Fix: Install ROS2 development packages:
+	 sudo apt install ros-humble-rclcpp-dev ros-humble-geometry-msgs
+
+
+================================================================================
+ADDITIONAL NOTES
+================================================================================
+
+- The voice receiver publishes to the same /cmd_vel topic as the chord receiver
+- Both control methods can coexist but shouldn't run simultaneously
+- Velocity limits match rb3_node_cpp.cpp (0.22 m/s linear, 2.84 rad/s angular)
+- In CONTINUOUS mode, the program continuously publishes the current state
+- In TIMED mode, it publishes for 2 seconds then sends stop command
+- Press Ctrl+C to cleanly shutdown and send final stop command
+
+================================================================================
