@@ -3,7 +3,8 @@
 #include <stdlib.h>    // For std::rand
 #include <chrono>
 #include <string>
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>  //not used??
+#include <mutex>
 //#include eliasclass.cpp
 
 
@@ -16,7 +17,7 @@ public:
     float getRot(); //return angular z
     void setVel(float f);
     void setRot(float f);
-    void driveForDuration(); //takes duration as input parameter.
+    void checkDurationExpiry(); 
 
     enum class State {IDLE, DURATION};
     State state() const {return state_;}
@@ -28,13 +29,15 @@ public:
     void setEnableDriving(bool b);
 
     void validatingSpeeds();
+    void startDuration(int s, float linear); //method to be called from receiver.cpp
 
 private:
+    mutable std::mutex mu_; //creates a mutex object
     float linear_x_;
     float angular_z_;
-    time_t time_stamp;
-    bool timeStampSet = false;
 
+    //dont know if these are usable /relevant
+    //bool timeStampSet = false;  
     bool enableDriving = false;
 
     //State data
