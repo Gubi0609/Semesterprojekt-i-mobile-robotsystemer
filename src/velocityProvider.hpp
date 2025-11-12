@@ -29,7 +29,7 @@ public:
     void setEnableDriving(bool b);
 
     void validatingSpeeds();
-    void startDuration(float s, float linear); //method to be called from receiver.cpp
+    void startDuration(float s); //method to be called from receiver.cpp
     void updatePrevValues();
 
     void setCustomDuration(float seconds);

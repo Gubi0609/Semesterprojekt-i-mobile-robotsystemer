@@ -46,7 +46,7 @@ void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startD
 	}
 }
 
-void VelocityProvider::startDuration(float seconds, float linear_vel){
+void VelocityProvider::startDuration(float seconds){
 	//i dont think this is used
 	std::lock_guard<std::mutex> lk(mu_);
 	customDuration = seconds; //just to track duration and prev duration
