@@ -18,6 +18,7 @@ float VelocityProvider::getRot(){
 }
 
 void VelocityProvider::setVel(float f){
+	std::lock_guard<std::mutex> lk(mu_);
 	// Expect input f in range [0 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
 	if(f > INPUT_MAX_LINEAR) f = INPUT_MAX_LINEAR;
 	if(f < INPUT_MIN_LINEAR) f = INPUT_MIN_LINEAR;
@@ -27,6 +28,7 @@ void VelocityProvider::setVel(float f){
 }
 
 void VelocityProvider::setRot(float f){
+	std::lock_guard<std::mutex> lk(mu_);
 	// Expect input f in range [-100 .. 100]. Map to physical range [-PHYS_MAX_ROT .. PHYS_MAX_ROT].
 	if(f > INPUT_MAX_ROT) f = INPUT_MAX_ROT;
 	if(f < INPUT_MIN_ROT) f = INPUT_MIN_ROT;
@@ -35,21 +37,6 @@ void VelocityProvider::setRot(float f){
 	angular_z_ = (f / INPUT_MAX_ROT) * PHYS_MAX_ROT;
 }
 
-void VelocityProvider::driveForDuration(int duration, float velocity){
-	// velocity is given in input range [0 .. 100], map to physical
-	if(velocity > INPUT_MAX_LINEAR) velocity = INPUT_MAX_LINEAR;
-	if(velocity < INPUT_MIN_LINEAR) velocity = INPUT_MIN_LINEAR;
-	durationVelocity = (velocity / INPUT_MAX_LINEAR) * PHYS_MAX_LINEAR;
-	end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(duration);
-	std::lock_guard<std::mutex> lk(mu_);
-	linear_x_ = std::clamp(f, 0.0f, 0.22f);
-}
-
-void VelocityProvider::setRot(float f){
-	std::lock_guard<std::mutex> lk(mu_);
-	angular_z_ = std::clamp(f, -2.84f, 2.84f);
-}
- 
 void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startDuration instead
 	std::lock_guard<std::mutex> lk(mu_);
 	if(!(std::chrono::steady_clock::now() <end_time_)){
@@ -60,10 +47,9 @@ void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startD
 }
 
 void VelocityProvider::startDuration(int seconds, float linear_vel){
+	//i dont think this is used
 	std::lock_guard<std::mutex> lk(mu_);
 	customDuration = seconds; //just to track duration and prev duration
-	linear_x_ = std::clamp(linear_vel, 0.0f, 0.22f);
-	angular_z_ = 0.0f;
 	end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
 	state_ = State::DURATION;
 }
@@ -107,7 +93,14 @@ void VelocityProvider::setState(State state){
 void VelocityProvider::driveForDuration(int seconds, float linear){
 	std::lock_guard<std::mutex> lk(mu_);
 	state_ = State::DURATION;
-	linear_x_ = std::clamp(linear, 0.0f, 0.22f);
+	setVel(linear);
+	customDuration = seconds;
+}
+
+void VelocityProvider::turnForDuration(int seconds, float rotational){
+	std::lock_guard<std::mutex> lk(mu_);
+	state_ = State::DURATION;
+	setRot(rotational);
 	customDuration = seconds;
 }
 

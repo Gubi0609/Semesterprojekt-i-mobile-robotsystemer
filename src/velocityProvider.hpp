@@ -35,6 +35,7 @@ public:
     void setCustomDuration(int seconds);
 
     void driveForDuration(int s, float linear);
+    void turnForDuration(int s, float rotational);
 
     int getPreFunc();
     void updatePreFunc(int p);
