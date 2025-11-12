@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstdlib>    // For std::rand and general C stdlib
 #include <chrono>
 #include <string>
+#include <ctime>
 #include <mutex>
+// #include "eliasclass.cpp"  // keep commented; include proper header if needed
 
 
 class VelocityProvider {
