@@ -29,13 +29,13 @@ public:
     void setEnableDriving(bool b);
 
     void validatingSpeeds();
-    void startDuration(int s, float linear); //method to be called from receiver.cpp
+    void startDuration(float s, float linear); //method to be called from receiver.cpp
     void updatePrevValues();
 
-    void setCustomDuration(int seconds);
+    void setCustomDuration(float seconds);
 
-    void driveForDuration(int s, float linear);
-    void turnForDuration(int s, float rotational);
+    void driveForDuration(float s, float linear);
+    void turnForDuration(float s, float rotational);
 
     int getPreFunc();
     void updatePreFunc(int p);
@@ -72,8 +72,8 @@ private:
     float prev_angular_z_ = 0.0f;
     float prev_duration = 0.0f;
     State prev_state_ = State::IDLE;
-    int prev_custom_duration = 0;
-    int customDuration = 0;
+    double prev_custom_duration = 0.0;
+    double customDuration = 0.0;
 
     int presetFunctionality = 0;
     

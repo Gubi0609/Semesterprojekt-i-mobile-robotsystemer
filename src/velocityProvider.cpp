@@ -46,11 +46,12 @@ void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startD
 	}
 }
 
-void VelocityProvider::startDuration(int seconds, float linear_vel){
+void VelocityProvider::startDuration(float seconds, float linear_vel){
 	//i dont think this is used
 	std::lock_guard<std::mutex> lk(mu_);
 	customDuration = seconds; //just to track duration and prev duration
-	end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
+	end_time_ = std::chrono::steady_clock::now() + 
+		std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(seconds));
 	state_ = State::DURATION;
 }
 
@@ -72,7 +73,8 @@ void VelocityProvider::update(){
 			//indsæt logik til at checke at values nu ikke er lig prev values.
 			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration){
 				updatePrevValues();
-				end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(customDuration);
+				end_time_ = std::chrono::steady_clock::now() +
+					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
 
 			}
 
@@ -90,14 +92,14 @@ void VelocityProvider::setState(State state){
 	state_ = state;
 }
 
-void VelocityProvider::driveForDuration(int seconds, float linear){
+void VelocityProvider::driveForDuration(float seconds, float linear){
 	std::lock_guard<std::mutex> lk(mu_);
 	state_ = State::DURATION;
 	setVel(linear);
 	customDuration = seconds;
 }
 
-void VelocityProvider::turnForDuration(int seconds, float rotational){
+void VelocityProvider::turnForDuration(float seconds, float rotational){
 	std::lock_guard<std::mutex> lk(mu_);
 	state_ = State::DURATION;
 	setRot(rotational);
@@ -122,7 +124,7 @@ void VelocityProvider::updatePrevValues(){
 	prev_custom_duration = customDuration;
 }
 
-void VelocityProvider::setCustomDuration(int s){
+void VelocityProvider::setCustomDuration(float s){
 	std::lock_guard<std::mutex> lk(mu_);
 	customDuration = s;
 }

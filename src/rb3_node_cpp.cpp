@@ -30,15 +30,15 @@ class RB3_cpp_publisher : public rclcpp::Node{
     if (provider_) {
       if(provider_->getPreFunc() == 0 && provider_->state() == VelocityProvider::State::IDLE){
         provider_->updatePreFunc(1);
-        provider_-> driveForDuration(10, 50);
+        provider_-> driveForDuration(10.0, 50);
       }
       if(provider_->getPreFunc() ==1 && provider_->state() == VelocityProvider::State::IDLE){
         provider_ ->updatePreFunc(2);
-        provider_-> turnForDuration(5, 50)
+        provider_-> turnForDuration(5.0, 50)
       }
       if(provider_->getPreFunc() ==2 && provider_->state() == VelocityProvider::State::IDLE){
         provider_ ->updatePreFunc(3);
-        provider_-> turnForDuration(5, -50)
+        provider_-> turnForDuration(5.0, -50)
       }
 
       provider_->update();
