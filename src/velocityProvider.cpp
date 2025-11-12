@@ -1,5 +1,6 @@
 #include "velocityProvider.hpp"
 #include <cstdlib>
+#include <algorithm> // for std::clamp
 
 VelocityProvider::VelocityProvider()
 : linear_x_(0.0f), angular_z_(0.0f), state_(State::IDLE), durationVelocity(0.0f)
