@@ -28,6 +28,11 @@ class RB3_cpp_publisher : public rclcpp::Node{
     msg.header.frame_id = "base_link";
 
     if (provider_) {
+      if(provider_->getPreFunc() != 1){
+        provider_->updatePreFunc(1);
+        provider_-> driveForDuration(10, 0.22f);
+      }
+      provider_->update();
       msg.twist.linear.x = provider_->getVel();
       msg.twist.angular.z = provider_->getRot();
     } else {
