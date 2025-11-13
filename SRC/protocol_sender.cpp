@@ -95,7 +95,7 @@ int main() {
 			std::cout << "Sending RESET signal\n";
 			std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 			uint16_t reset = encodeReset();
-			sendCommand(transmitter, crc, reset, "RESET (enter mode select)", 1.0, false);
+			sendCommand(transmitter, crc, reset, "RESET (enter mode select)", 0.8, false);
 			continue;
 		}
 
@@ -127,7 +127,7 @@ int main() {
 			}
 
 			uint16_t modeCmd = encodeModeSelect(mode);
-			sendCommand(transmitter, crc, modeCmd, "Mode: " + CommandProtocol::modeToString(mode), 2.0, false);
+			sendCommand(transmitter, crc, modeCmd, "Mode: " + CommandProtocol::modeToString(mode), 0.8, false);
 			continue;
 		}
 
@@ -145,7 +145,7 @@ int main() {
 		std::cout << "Step 1: Sending RESET signal\n";
 		std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 		uint16_t reset = encodeReset();
-		sendCommand(transmitter, crc, reset, "RESET (enter mode select)", 1.0, true);
+		sendCommand(transmitter, crc, reset, "RESET (enter mode select)", 0.8, true);
 
 		switch (numChoice) {
 			case 1: {
@@ -153,7 +153,7 @@ int main() {
 				std::cout << "Step 2: Select DRIVE_FOR_DURATION mode\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t modeSelect = encodeModeSelect(RobotMode::DRIVE_FOR_DURATION);
-				sendCommand(transmitter, crc, modeSelect, "Mode: DRIVE_FOR_DURATION", 2.0, true);
+				sendCommand(transmitter, crc, modeSelect, "Mode: DRIVE_FOR_DURATION", 0.8, true);
 
 				float duration, speed;
 				std::cout << "\nEnter duration (0-8 seconds): ";
@@ -166,7 +166,7 @@ int main() {
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t cmd = encodeDriveForDuration(duration, speed);
 				DriveForDurationCommand decoded = DriveForDurationCommand::decode(cmd);
-				sendCommand(transmitter, crc, cmd, "Drive: " + decoded.toString(), 1.0, false);
+				sendCommand(transmitter, crc, cmd, "Drive: " + decoded.toString(), 0.8, false);
 				break;
 			}
 
@@ -175,7 +175,7 @@ int main() {
 				std::cout << "Step 2: Select TURN_FOR_DURATION mode\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t modeSelect = encodeModeSelect(RobotMode::TURN_FOR_DURATION);
-				sendCommand(transmitter, crc, modeSelect, "Mode: TURN_FOR_DURATION", 2.0, true);
+				sendCommand(transmitter, crc, modeSelect, "Mode: TURN_FOR_DURATION", 0.8, true);
 
 				float duration, turnRate;
 				std::cout << "\nEnter duration (0-8 seconds): ";
@@ -188,7 +188,7 @@ int main() {
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t cmd = encodeTurnForDuration(duration, turnRate);
 				TurnForDurationCommand decoded = TurnForDurationCommand::decode(cmd);
-				sendCommand(transmitter, crc, cmd, "Turn: " + decoded.toString(), 1.0, false);
+				sendCommand(transmitter, crc, cmd, "Turn: " + decoded.toString(), 0.8, false);
 				break;
 			}
 
@@ -197,7 +197,7 @@ int main() {
 				std::cout << "Step 2: Select DRIVE_FORWARD mode\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t modeSelect = encodeModeSelect(RobotMode::DRIVE_FORWARD);
-				sendCommand(transmitter, crc, modeSelect, "Mode: DRIVE_FORWARD (continuous)", 2.0, true);
+				sendCommand(transmitter, crc, modeSelect, "Mode: DRIVE_FORWARD (continuous)", 0.8, true);
 
 				float speed;
 				std::cout << "\nEnter speed (0-100%): ";
@@ -208,7 +208,7 @@ int main() {
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t cmd = encodeDriveForward(speed);
 				DriveForwardCommand decoded = DriveForwardCommand::decode(cmd);
-				sendCommand(transmitter, crc, cmd, "Drive: " + decoded.toString(), 1.0, false);
+				sendCommand(transmitter, crc, cmd, "Drive: " + decoded.toString(), 0.8, false);
 				std::cout << "\nNote: Robot will drive continuously until stopped or new command received.\n";
 				break;
 			}
@@ -218,7 +218,7 @@ int main() {
 				std::cout << "Step 2: Select TURN mode\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t modeSelect = encodeModeSelect(RobotMode::TURN);
-				sendCommand(transmitter, crc, modeSelect, "Mode: TURN (continuous)", 2.0, true);
+				sendCommand(transmitter, crc, modeSelect, "Mode: TURN (continuous)", 0.8, true);
 
 				float turnRate;
 				std::cout << "\nEnter turn rate (-100 to +100%, negative=left, positive=right): ";
@@ -229,7 +229,7 @@ int main() {
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t cmd = encodeTurn(turnRate);
 				TurnCommand decoded = TurnCommand::decode(cmd);
-				sendCommand(transmitter, crc, cmd, "Turn: " + decoded.toString(), 1.0, false);
+				sendCommand(transmitter, crc, cmd, "Turn: " + decoded.toString(), 0.8, false);
 				std::cout << "\nNote: Robot will turn continuously until stopped or new command received.\n";
 				break;
 			}
@@ -239,7 +239,7 @@ int main() {
 				std::cout << "Step 2: Send STOP command\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				uint16_t stopCmd = encodeStop();
-				sendCommand(transmitter, crc, stopCmd, "STOP command", 1.0, false);
+				sendCommand(transmitter, crc, stopCmd, "STOP command", 0.8, false);
 				break;
 			}
 
@@ -251,30 +251,30 @@ int main() {
 
 				// Forward for 2 seconds at 50%
 				std::cout << "\n[1/4] Forward\n";
-				sendCommand(transmitter, crc, encodeReset(), "RESET", 1.0, true);
-				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION), "Mode: DRIVE", 2.0, true);
-				sendCommand(transmitter, crc, encodeDriveForDuration(2.0f, 50.0f), "Drive 2s at 50%", 1.0, true);
+				sendCommand(transmitter, crc, encodeReset(), "RESET", 0.8, true);
+				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION), "Mode: DRIVE", 0.8, true);
+				sendCommand(transmitter, crc, encodeDriveForDuration(2.0f, 50.0f), "Drive 2s at 50%", 0.8, true);
 				std::this_thread::sleep_for(std::chrono::seconds(3));
 
 				// Turn right 90 degrees (1 second at 50%)
 				std::cout << "\n[2/4] Turn right\n";
-				sendCommand(transmitter, crc, encodeReset(), "RESET", 1.0, true);
-				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::TURN_FOR_DURATION), "Mode: TURN", 2.0, true);
-				sendCommand(transmitter, crc, encodeTurnForDuration(1.0f, 50.0f), "Turn 1s right", 1.0, true);
+				sendCommand(transmitter, crc, encodeReset(), "RESET", 0.8, true);
+				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::TURN_FOR_DURATION), "Mode: TURN", 0.8, true);
+				sendCommand(transmitter, crc, encodeTurnForDuration(1.0f, 50.0f), "Turn 1s right", 0.8, true);
 				std::this_thread::sleep_for(std::chrono::seconds(2));
 
 				// Forward again
 				std::cout << "\n[3/4] Forward\n";
-				sendCommand(transmitter, crc, encodeReset(), "RESET", 1.0, true);
-				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION), "Mode: DRIVE", 2.0, true);
-				sendCommand(transmitter, crc, encodeDriveForDuration(2.0f, 50.0f), "Drive 2s at 50%", 1.0, true);
+				sendCommand(transmitter, crc, encodeReset(), "RESET", 0.8, true);
+				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION), "Mode: DRIVE", 0.8, true);
+				sendCommand(transmitter, crc, encodeDriveForDuration(2.0f, 50.0f), "Drive 2s at 50%", 0.8, true);
 				std::this_thread::sleep_for(std::chrono::seconds(3));
 
 				// Turn right again
 				std::cout << "\n[4/4] Turn right\n";
-				sendCommand(transmitter, crc, encodeReset(), "RESET", 1.0, true);
-				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::TURN_FOR_DURATION), "Mode: TURN", 2.0, true);
-				sendCommand(transmitter, crc, encodeTurnForDuration(1.0f, 50.0f), "Turn 1s right", 1.0, true);
+				sendCommand(transmitter, crc, encodeReset(), "RESET", 0.8, true);
+				sendCommand(transmitter, crc, encodeModeSelect(RobotMode::TURN_FOR_DURATION), "Mode: TURN", 0.8, true);
+				sendCommand(transmitter, crc, encodeTurnForDuration(1.0f, 50.0f), "Turn 1s right", 0.8, true);
 
 				std::cout << "\nSequence complete!\n";
 				break;

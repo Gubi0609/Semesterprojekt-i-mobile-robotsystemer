@@ -14,6 +14,20 @@
 // Global flag for graceful shutdown
 std::atomic<bool> running(true);
 
+// Duplicate detection prevention
+struct LastDetection {
+	uint16_t value = 0;
+	std::chrono::steady_clock::time_point timestamp;
+	bool hasValue = false;
+};
+LastDetection lastDetection;
+const double LOCKOUT_PERIOD = 0.8;  // Seconds - based on max latency of 0.755s + margin
+
+// Microphone restart tracking
+std::chrono::steady_clock::time_point lastActivityTime;
+const double RESTART_INTERVAL = 30.0;  // Restart mic if idle for 30 seconds
+bool needsRestart = false;
+
 // Signal handler for Ctrl+C
 void signalHandler(int signum) {
 	std::cout << "\n\nReceived interrupt signal (" << signum << ")\n";
@@ -181,6 +195,16 @@ int main(int argc, char* argv[]) {
 	AudioComm::ChordReceiver receiver;
 	AudioComm::ChordReceiver::Config recvConfig;
 
+	// INCREASED FFT SIZE for better frequency resolution
+	// 16384 samples @ 48kHz = ~2.93 Hz resolution (vs 5.86 Hz with 8192)
+	// This helps distinguish closely-spaced tones more accurately
+	recvConfig.fftSize = 16384;
+
+	// INCREASED DETECTION TOLERANCE for hardware frequency variations
+	// Your microphone test showed ±50 Hz variations, so we use 150 Hz tolerance
+	// to accommodate potential compounding effects when multiple tones play
+	recvConfig.detectionTolerance = 150.0;
+
 	// Configure based on selected mode
 	switch(mode) {
 		case 1: // Safe Mode
@@ -204,14 +228,41 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 
-	std::cout << "Starting audio receiver...\n";
+	// Display FFT resolution info
+	double freqResolution = recvConfig.sampleRate / recvConfig.fftSize;
+	std::cout << "FFT Size: " << recvConfig.fftSize
+	          << " (Frequency resolution: " << std::fixed << std::setprecision(2)
+	          << freqResolution << " Hz per bin)\n";
+	std::cout << "Detection Tolerance: " << recvConfig.detectionTolerance << " Hz\n";
+	std::cout << "Duplicate Lockout: " << LOCKOUT_PERIOD << " seconds\n";
+	std::cout << "Auto-restart interval: " << RESTART_INTERVAL << " seconds (when idle)\n";
+
+	std::cout << "\nStarting audio receiver...\n";
 	std::cout << "Listening for CRC-encoded protocol commands...\n";
 	std::cout << "Press Ctrl+C to stop\n\n";
 	std::cout << std::string(60, '=') << "\n\n";
 
-	// Start receiving with callback
-	bool receiverStarted = receiver.startReceiving(recvConfig,
-		[&crc, &protocol](const AudioComm::ChordReceiver::Detection& det) {
+	// Initialize activity timestamp
+	lastActivityTime = std::chrono::steady_clock::now();
+
+	// Define the detection callback (reusable for restarts)
+	auto detectionCallback = [&crc, &protocol](const AudioComm::ChordReceiver::Detection& det) {
+			// Check for duplicate detection (lockout period)
+			auto now = std::chrono::steady_clock::now();
+			if (lastDetection.hasValue && lastDetection.value == det.value) {
+				auto timeSinceLast = std::chrono::duration<double>(now - lastDetection.timestamp).count();
+				if (timeSinceLast < LOCKOUT_PERIOD) {
+					// Duplicate detection within lockout period - ignore silently
+					return;
+				}
+			}
+
+			// Update last detection and activity time
+			lastDetection.value = det.value;
+			lastDetection.timestamp = now;
+			lastDetection.hasValue = true;
+			lastActivityTime = now;  // Update activity timestamp
+
 			std::cout << "\n┌─────────────────────────────────────────────────────────\n";
 			std::cout << "│ CHORD DETECTED\n";
 			std::cout << "├─────────────────────────────────────────────────────────\n";
@@ -272,7 +323,10 @@ int main(int argc, char* argv[]) {
 
 			std::cout << "\n" << std::string(60, '=') << "\n";
 			std::cout << "Ready for next command...\n\n";
-		});
+	};
+
+	// Start receiving with callback
+	bool receiverStarted = receiver.startReceiving(recvConfig, detectionCallback);
 
 	if (!receiverStarted) {
 		std::cerr << "✗ ERROR: Failed to start audio receiver!\n";
@@ -282,6 +336,33 @@ int main(int argc, char* argv[]) {
 	// Keep running until interrupted
 	while (running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		// Check if we need to restart the microphone (only when idle)
+		auto now = std::chrono::steady_clock::now();
+		auto timeSinceActivity = std::chrono::duration<double>(now - lastActivityTime).count();
+
+		if (timeSinceActivity >= RESTART_INTERVAL && !needsRestart) {
+			needsRestart = true;
+			std::cout << "\n⟳ Idle for " << RESTART_INTERVAL << "s - Restarting microphone...\n";
+
+			// Stop receiver
+			receiver.stop();
+			std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Brief pause
+
+			// Restart receiver with same config and callback
+			receiverStarted = receiver.startReceiving(recvConfig, detectionCallback);
+
+			if (receiverStarted) {
+				std::cout << "✓ Microphone restarted successfully\n";
+				std::cout << "Listening for commands...\n\n";
+			} else {
+				std::cerr << "✗ ERROR: Failed to restart microphone!\n";
+			}
+
+			// Reset activity timer and restart flag
+			lastActivityTime = std::chrono::steady_clock::now();
+			needsRestart = false;
+		}
 	}
 
 	// Cleanup
