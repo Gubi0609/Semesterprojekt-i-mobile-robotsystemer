@@ -93,11 +93,30 @@ void VelocityProvider::setState(State state){
 	state_ = state;
 }
 
-void VelocityProvider::driveForDuration(float seconds, float linear){
+void VelocityProvider::forwardForDuration(float seconds, float linear){
 	//std::lock_guard<std::mutex> lk(mu_);
 	state_ = State::DURATION;
 	setVel(linear);
 	customDuration = seconds;
+}
+
+void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
+	state_ = State::DURATION;
+	customDuration = seconds;
+	auto[lin, rot] = adjustLinAndRot(lin, rot);
+	setVel(lin);
+	setRot(rot);
+}
+
+std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
+	if(lin+std::fabs(rot)<100.0f){
+		return {lin,rot};
+	}
+	while(lin+std::fabs(rot)>100.0f){
+		lin = lin*0.95f;
+		rot = rot*0.9f;
+	}
+	return {lin,rot};
 }
 
 void VelocityProvider::turnForDuration(float seconds, float rotational){

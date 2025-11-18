@@ -5,6 +5,12 @@
 #include <string>
 #include <bits/stdc++.h>  
 #include <mutex>
+
+//to return multiple floats
+#include <tuple>
+
+//to use fabs(float abs)
+#include <cmath>
 //#include eliasclass.cpp
 
 
@@ -34,8 +40,11 @@ public:
 
     void setCustomDuration(float seconds);
 
-    void driveForDuration(float s, float linear);
+    void forwardForDuration(float s, float linear);
     void turnForDuration(float s, float rotational);
+    void driveForDuration(float s, float linear, float rotational);
+
+    std::tuple<float, float> adjustLinAndRot(float linear, float rotational);
 
     int getPreFunc();
     void updatePreFunc(int p);
