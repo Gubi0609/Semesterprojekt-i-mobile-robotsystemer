@@ -27,6 +27,7 @@ void VelocityProvider::setVel(float f){
 }
 
 void VelocityProvider::setRot(float f){
+	std::lock_guard<std::mutex> lk(mu_);
 	// Expect input f in range [-100 .. 100]. Map to physical range [-PHYS_MAX_ROT .. PHYS_MAX_ROT].
 	if(f > INPUT_MAX_ROT) f = INPUT_MAX_ROT;
 	if(f < INPUT_MIN_ROT) f = INPUT_MIN_ROT;
@@ -109,6 +110,7 @@ void VelocityProvider::driveForDuration(int seconds, float linear){
 	state_ = State::DURATION;
 	linear_x_ = std::clamp(linear, 0.0f, 0.22f);
 	customDuration = seconds;
+	end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
 }
 
 void VelocityProvider::setEnableDriving(bool b) {
@@ -140,4 +142,91 @@ int VelocityProvider::getPreFunc(){
 
 void VelocityProvider::updatePreFunc(int p){
 	presetFunctionality = p;
+}
+
+// ------------------------ VelocityController implementation ------------------------
+
+VelocityController::VelocityController(VelocityProvider* provider)
+: provider_(provider), running_(false), ramp_seconds_(1.5f) {}
+
+VelocityController::~VelocityController(){
+	stop();
+}
+
+void VelocityController::start(){
+	bool expected = false;
+	if(!running_.compare_exchange_strong(expected, true)) return; // already running
+	loop_thread_ = std::thread(&VelocityController::runLoop, this);
+}
+
+void VelocityController::stop(){
+	bool expected = true;
+	if(!running_.compare_exchange_strong(expected, false)) return; // not running
+	if(loop_thread_.joinable()) loop_thread_.join();
+}
+
+static bool keyDownWin(char c){
+#if defined(_WIN32)
+	SHORT s = GetAsyncKeyState(static_cast<int>(toupper(c)));
+	return (s & 0x8000) != 0;
+#else
+	(void)c;
+	return false;
+#endif
+}
+
+void VelocityController::runLoop(){
+	using clock = std::chrono::steady_clock;
+	const float max_input = INPUT_MAX_LINEAR; // 100
+	const float ramp_rate = max_input / std::max(0.001f, ramp_seconds_); // units per sec
+
+	float cur_linear = 0.0f;   // -100..100
+	float cur_angular = 0.0f;  // -100..100
+
+	auto last = clock::now();
+	while(running_){
+		auto now = clock::now();
+		std::chrono::duration<float> dt = now - last;
+		last = now;
+		float delta = dt.count();
+
+		bool w = keyDownWin('W');
+		bool s = keyDownWin('S');
+		bool a = keyDownWin('A');
+		bool d = keyDownWin('D');
+
+		float target_linear = 0.0f;
+		float target_angular = 0.0f;
+
+		if(w && !s) target_linear = 100.0f;
+		else if(s && !w) target_linear = -100.0f;
+		else target_linear = 0.0f;
+
+		if(a && !d) target_angular = 100.0f;
+		else if(d && !a) target_angular = -100.0f;
+		else target_angular = 0.0f;
+
+		// if A/D alone -> in-place rotation (linear 0), if combined with W/S -> curved
+		if((a || d) && !(w || s)){
+			target_linear = 0.0f;
+		}
+
+		auto rampToward = [&](float cur, float tgt)->float{
+			float diff = tgt - cur;
+			float max_step = ramp_rate * delta;
+			if(std::fabs(diff) <= max_step) return tgt;
+			return cur + (diff > 0 ? max_step : -max_step);
+		};
+
+		cur_linear = rampToward(cur_linear, target_linear);
+		cur_angular = rampToward(cur_angular, target_angular);
+
+		// inject into provider (provider will map to physical units)
+		if(provider_){
+			provider_->setVel(cur_linear);
+			provider_->setRot(cur_angular);
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	}
 }

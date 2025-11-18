@@ -44,9 +44,9 @@ private:
     float linear_x_;
     float angular_z_;
     // Input and physical limits
-    // Users should provide linear velocity in range [0 .. 100]
-    // which will be mapped to physical linear [0 .. PHYS_MAX_LINEAR]
-    static constexpr float INPUT_MIN_LINEAR = 0.0f;
+    // Users should provide linear velocity in range [-100 .. 100]
+    // which will be mapped to physical linear [-PHYS_MAX_LINEAR .. PHYS_MAX_LINEAR]
+    static constexpr float INPUT_MIN_LINEAR = -100.0f;
     static constexpr float INPUT_MAX_LINEAR = 100.0f;
     static constexpr float PHYS_MAX_LINEAR = 0.22f;
 
@@ -76,4 +76,30 @@ private:
 
     int presetFunctionality = 0;
     
+};
+
+// VelocityController: keyboard (WASD) based controller that injects speeds into a VelocityProvider.
+// Usage: create a VelocityController with a pointer to an existing VelocityProvider and call
+// start() to run the background input loop, stop() to stop. The controller ramps speed from
+// 0..100 over approx 1.5s while keys are held.
+class VelocityController {
+public:
+    explicit VelocityController(VelocityProvider* provider);
+    ~VelocityController();
+
+    // Start/stop the background thread. Non-blocking start.
+    void start();
+    void stop();
+    bool isRunning() const { return running_; }
+
+    // Optional: configure ramp duration (seconds to go from 0 to 100)
+    void setRampSeconds(float seconds) { ramp_seconds_ = seconds; }
+
+private:
+    void runLoop();
+
+    VelocityProvider* provider_ = nullptr;
+    std::atomic<bool> running_{false};
+    std::thread loop_thread_;
+    float ramp_seconds_ = 1.5f; // default ramp time
 };
