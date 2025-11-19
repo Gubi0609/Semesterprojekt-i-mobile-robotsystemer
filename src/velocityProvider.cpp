@@ -143,7 +143,7 @@ int VelocityProvider::getPreFunc(){
 void VelocityProvider::updatePreFunc(int p){
 	presetFunctionality = p;
 }
-
+/*
 // ------------------------ VelocityController implementation ------------------------
 
 VelocityController::VelocityController(VelocityProvider* provider)
@@ -174,6 +174,7 @@ static bool keyDownWin(char c){
 	return false;
 #endif
 }
+
 
 void VelocityController::runLoop(){
 	using clock = std::chrono::steady_clock;
@@ -230,3 +231,4 @@ void VelocityController::runLoop(){
 		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	}
 }
+*/
