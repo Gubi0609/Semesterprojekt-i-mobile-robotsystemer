@@ -216,8 +216,8 @@ int main(int argc, char* argv[]) {
 	} else {
 		// Continuous mode - wait for Ctrl+C
 		std::cout << "\n(Ctrl+C to stop)\n";
-		while (detector.isDetecting()) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if(!detector.isDetecting()){
+			exit(0);
 		}
 	}
 
