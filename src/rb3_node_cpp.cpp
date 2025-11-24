@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <stdlib.h>
+#include <optional>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
