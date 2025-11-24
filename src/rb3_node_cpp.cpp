@@ -128,14 +128,20 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
       //"lightweight duplicate-detection state local to this thread"
       uint16_t lastValue = 0;
+      RCLCPP_INFO(this->get_logger(), "Starting audio receiver thread...");
       std::chrono::steady_clock::time_point lastTimestamp = std::chrono::steady_clock::now();
       const double LOCKOUT_PERIOD = 0.8;
 
-      auto detectionCallback = [&crc, &protocol, &lastValue, &lastTimestamp, &receiver, LOCKOUT_PERIOD](const AudioComm::ChordReceiver::Detection& det){
+      auto detectionCallback = [&](const AudioComm::ChordReceiver::Detection& det){
+        RCLCPP_INFO(this->get_logger(), "🎵 RAW AUDIO DETECTED! Value: 0x%04X", det.value);
+
         auto now = std::chrono::steady_clock::now();
         if(lastValue ==det.value){
           double elapsed = std::chrono::duration<double>(now - lastTimestamp).count();
-          if(elapsed <LOCKOUT_PERIOD) return; //ignore duplicate
+          if(elapsed <LOCKOUT_PERIOD) { //ignore duplicate
+            RCLCPP_INFO(this->get_logger(), "🔄 DUPLICATE ignored (%.2fs ago)", elapsed);
+            return;
+          }
         }
         lastValue = det.value;
         lastTimestamp = now;
@@ -143,6 +149,8 @@ class RB3_cpp_publisher : public rclcpp::Node{
         if(!crc.verify(det.value)){
           RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "CRC failed for detection value 0x%04X", det.value);
           return;
+        } else {
+          RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "✅ CRC PASSED for 0x%04X", det.value);
         }
 
         auto decoded = crc.decode1612(det.value);
@@ -151,15 +159,28 @@ class RB3_cpp_publisher : public rclcpp::Node{
           return;
         }
         uint16_t command = decoded.value();
+        RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
         protocol.processCommand(command);
+
+        if(!started){
+          RCLCPP_ERROR(this->get_logger(), "❌ Audio receiver failed to start");
+          receiver_running_.store(false);
+          return;
+        } else {
+          RCLCPP_INFO(this->get_logger(), "✅ Audio receiver started successfully!");
+          RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
+        }
 
       };
 
       bool started = receiver.startReceiving(recvConfig, detectionCallback);
       if(!started){
-        RCLCPP_ERROR(this->get_logger(), "protocol receiver failed to start");
+        RCLCPP_ERROR(this->get_logger(), "❌ Audio receiver failed to start");
         receiver_running_.store(false);
         return;
+      } else {
+        RCLCPP_INFO(this->get_logger(), "✅ Audio receiver started successfully!");
+        RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
       }
 
       //run until asked to stop
