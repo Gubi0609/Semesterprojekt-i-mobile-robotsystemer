@@ -90,9 +90,9 @@ void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
 	std::lock_guard<std::mutex> lk(mu_);
 	state_ = State::DURATION;
 	customDuration = seconds;
-	auto[lin, rot] = adjustLinAndRot(lin, rot);
-	setVel(lin);
-	setRot(rot);
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin, rot);
+	setVel(adjustedLin);
+	setRot(adjustedRot);
 }
 
 std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
