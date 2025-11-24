@@ -8,6 +8,10 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
+#include "../LIB/audio_receiver.h"
+#include "../INCLUDE/CRC.h"
+#include "../INCLUDE/command_protocol.h"
+
 #include "velocityProvider.hpp"   // <-- new
 using namespace std;
 using namespace std::chrono_literals; // for 1000ms
