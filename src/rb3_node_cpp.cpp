@@ -131,7 +131,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       std::chrono::steady_clock::time_point lastTimestamp = std::chrono::steady_clock::now();
       const double LOCKOUT_PERIOD = 0.8;
 
-      auto detectionCallback = [&crc, &protocol, &lastValue, &lastTimestamp, &receiver](const AudioComm::ChordReceiver::Detection& det){
+      auto detectionCallback = [&crc, &protocol, &lastValue, &lastTimestamp, &receiver, LOCKOUT_PERIOD](const AudioComm::ChordReceiver::Detection& det){
         auto now = std::chrono::steady_clock::now();
         if(lastValue ==det.value){
           double elapsed = std::chrono::duration<double>(now - lastTimestamp).count();
