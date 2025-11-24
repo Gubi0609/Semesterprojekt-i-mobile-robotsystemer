@@ -97,7 +97,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       protocol.setDriveForDurationCallback([provider](const DriveForDurationCommand& cmd){
         if(!provider) return;
         double d = cmd.getDurationSeconds();
-        float speed cmd.getSpeedPercent();
+        float speed = cmd.getSpeedPercent();
         //drive forward for duration (speed expected in percent 0..100)
         provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
       });
@@ -118,7 +118,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   
       AudioComm::ChordReceiver receiver;
-      AudioComm::chordReceiver::Config recvConfig;
+      AudioComm::ChordReceiver::Config recvConfig;
       recvConfig.fftSize = 16384;
       recvConfig.detectionTolerance = 150.0;
       recvConfig.minDetections = 2;
@@ -145,7 +145,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
         }
 
         auto decoded = crc.decode1612(det.value);
-        if(!decoded.hast_value()){
+        if(!decoded.has_value()){
           RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "Decode failed for 0x%04X", det.value);
           return;
         }
@@ -163,7 +163,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
       //run until asked to stop
       while(receiver_running_.load()){
-        std::this_thread::sleep_for(100 ms);
+        std::this_thread::sleep_for(100ms);
       }
 
       //cleanup
