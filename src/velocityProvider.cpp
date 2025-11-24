@@ -7,20 +7,22 @@ VelocityProvider::VelocityProvider()
 {}
 
 float VelocityProvider::getVel() {
-	std::lock_guard<std::mutex> lk(mu_); //uses mutex in every method to prevent errors. lockGuard is destructed when out of scope (code exits method)
+	//use recursive mutex instead to avoid deadlock, but still be able to use mutex in all methods
+	//std::lock_guard<std::mutex> lk(mu_); //uses mutex in every method to prevent errors. lockGuard is destructed when out of scope (code exits method)
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	linear_x_= std::clamp(linear_x_,0.0f, 0.22f);
 	return linear_x_;
 }
 
 float VelocityProvider::getRot(){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	angular_z_= std::clamp(angular_z_,-2.84f, 2.84f);
 	return angular_z_;
 }
 
 
 void VelocityProvider::setVel(float f){
-	//no mutex because inner function
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// Expect input f in range [0 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
 	if(f > INPUT_MAX_LINEAR) f = INPUT_MAX_LINEAR;
 	if(f < INPUT_MIN_LINEAR) f = INPUT_MIN_LINEAR;
@@ -30,7 +32,7 @@ void VelocityProvider::setVel(float f){
 }
 
 void VelocityProvider::setRot(float f){
-	//no mutex because inner function
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// Expect input f in range [-100 .. 100]. Map to physical range [-PHYS_MAX_ROT .. PHYS_MAX_ROT].
 	if(f > INPUT_MAX_ROT) f = INPUT_MAX_ROT;
 	if(f < INPUT_MIN_ROT) f = INPUT_MIN_ROT;
@@ -40,7 +42,7 @@ void VelocityProvider::setRot(float f){
 }
 
 void VelocityProvider::checkDurationExpiry(){
-	//no mutex because inner function
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	if(!(std::chrono::steady_clock::now() <end_time_)){
 		linear_x_ = 0.0f;
 		angular_z_ = 0.0f;
@@ -50,7 +52,7 @@ void VelocityProvider::checkDurationExpiry(){
 
 
 void VelocityProvider::update(){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// if(!enableDriving()) return;
 	if(state_ == State::IDLE){
 		//switch(receiver.get(currentSignal)):  //currentSignal har værdier.
@@ -75,19 +77,19 @@ void VelocityProvider::update(){
 }
 
 void VelocityProvider::setState(State state){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = state;
 }
 
 void VelocityProvider::forwardForDuration(float seconds, float linear){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setVel(linear);
 	customDuration = seconds;
 }
 
 void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	customDuration = seconds;
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin, rot);
@@ -107,7 +109,7 @@ std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot)
 }
 
 void VelocityProvider::turnForDuration(float seconds, float rotational){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setRot(rotational);
 	customDuration = seconds;
@@ -125,6 +127,7 @@ bool VelocityProvider::getEnableDriving(){
 
 //no mutex because this is inner fucntion
 void VelocityProvider::updatePrevValues(){
+	//only used as helper function. If called from other file on its own, add recursive mutex
 	prev_angular_z_ = angular_z_;
 	prev_linear_x_ = linear_x_;
 	prev_state_ = state_;
@@ -132,16 +135,16 @@ void VelocityProvider::updatePrevValues(){
 }
 
 void VelocityProvider::setCustomDuration(float s){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	customDuration = s;
 }
 
 int VelocityProvider::getPreFunc(){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	return presetFunctionality;
 }
 
 void VelocityProvider::updatePreFunc(int p){
-	std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	presetFunctionality = p;
 }
