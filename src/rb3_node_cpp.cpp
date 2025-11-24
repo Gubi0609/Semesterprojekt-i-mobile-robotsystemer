@@ -162,15 +162,6 @@ class RB3_cpp_publisher : public rclcpp::Node{
         RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
         protocol.processCommand(command);
 
-        if(!started){
-          RCLCPP_ERROR(this->get_logger(), "❌ Audio receiver failed to start");
-          receiver_running_.store(false);
-          return;
-        } else {
-          RCLCPP_INFO(this->get_logger(), "✅ Audio receiver started successfully!");
-          RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
-        }
-
       };
 
       bool started = receiver.startReceiving(recvConfig, detectionCallback);
