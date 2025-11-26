@@ -7,19 +7,22 @@ VelocityProvider::VelocityProvider()
 {}
 
 float VelocityProvider::getVel() {
+	//use recursive mutex instead to avoid deadlock, but still be able to use mutex in all methods
 	//std::lock_guard<std::mutex> lk(mu_); //uses mutex in every method to prevent errors. lockGuard is destructed when out of scope (code exits method)
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	linear_x_= std::clamp(linear_x_,0.0f, 0.22f);
 	return linear_x_;
 }
 
 float VelocityProvider::getRot(){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	angular_z_= std::clamp(angular_z_,-2.84f, 2.84f);
 	return angular_z_;
 }
 
+
 void VelocityProvider::setVel(float f){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// Expect input f in range [0 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
 	if(f > INPUT_MAX_LINEAR) f = INPUT_MAX_LINEAR;
 	if(f < INPUT_MIN_LINEAR) f = INPUT_MIN_LINEAR;
@@ -29,7 +32,7 @@ void VelocityProvider::setVel(float f){
 }
 
 void VelocityProvider::setRot(float f){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// Expect input f in range [-100 .. 100]. Map to physical range [-PHYS_MAX_ROT .. PHYS_MAX_ROT].
 	if(f > INPUT_MAX_ROT) f = INPUT_MAX_ROT;
 	if(f < INPUT_MIN_ROT) f = INPUT_MIN_ROT;
@@ -38,8 +41,8 @@ void VelocityProvider::setRot(float f){
 	angular_z_ = (f / INPUT_MAX_ROT) * PHYS_MAX_ROT;
 }
 
-void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startDuration instead
-	//std::lock_guard<std::mutex> lk(mu_);
+void VelocityProvider::checkDurationExpiry(){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	if(!(std::chrono::steady_clock::now() <end_time_)){
 		linear_x_ = 0.0f;
 		angular_z_ = 0.0f;
@@ -47,18 +50,9 @@ void VelocityProvider::checkDurationExpiry(){ //maybe remove this and use startD
 	}
 }
 
-void VelocityProvider::startDuration(float seconds){
-	//i dont think this is used
-	//std::lock_guard<std::mutex> lk(mu_);
-	customDuration = seconds; //just to track duration and prev duration
-	end_time_ = std::chrono::steady_clock::now() + 
-		std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(seconds));
-	state_ = State::DURATION;
-}
-
 
 void VelocityProvider::update(){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	// if(!enableDriving()) return;
 	if(state_ == State::IDLE){
 		//switch(receiver.get(currentSignal)):  //currentSignal har værdier.
@@ -78,34 +72,29 @@ void VelocityProvider::update(){
 					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
 
 			}
-
-			//bit to command reader fra recieve currentcommand...
-			//velocity = currentSignal //linear_X 		//vi læser data fra anden fil
-			//duration = ???
-			//curentSignal
-			//end_time_ = std::chrono::steady_clock::now() + std::chrono::seconds(duration);
 			checkDurationExpiry();
 	}			
 }
 
 void VelocityProvider::setState(State state){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = state;
 }
 
 void VelocityProvider::forwardForDuration(float seconds, float linear){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setVel(linear);
 	customDuration = seconds;
 }
 
 void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	customDuration = seconds;
-	auto[lin, rot] = adjustLinAndRot(lin, rot);
-	setVel(lin);
-	setRot(rot);
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin, rot);
+	setVel(adjustedLin);
+	setRot(adjustedRot);
 }
 
 std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
@@ -120,7 +109,7 @@ std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot)
 }
 
 void VelocityProvider::turnForDuration(float seconds, float rotational){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setRot(rotational);
 	customDuration = seconds;
@@ -136,8 +125,9 @@ bool VelocityProvider::getEnableDriving(){
 	return enableDriving;	
 }
 
+//no mutex because this is inner fucntion
 void VelocityProvider::updatePrevValues(){
-	//std::lock_guard<std::mutex> lk(mu_);
+	//only used as helper function. If called from other file on its own, add recursive mutex
 	prev_angular_z_ = angular_z_;
 	prev_linear_x_ = linear_x_;
 	prev_state_ = state_;
@@ -145,14 +135,16 @@ void VelocityProvider::updatePrevValues(){
 }
 
 void VelocityProvider::setCustomDuration(float s){
-	//std::lock_guard<std::mutex> lk(mu_);
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	customDuration = s;
 }
 
 int VelocityProvider::getPreFunc(){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	return presetFunctionality;
 }
 
 void VelocityProvider::updatePreFunc(int p){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
 	presetFunctionality = p;
 }

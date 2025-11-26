@@ -50,7 +50,9 @@ public:
     void updatePreFunc(int p);
 
 private:
-    mutable std::mutex mu_; //creates a mutex object
+    //using recursive mutex
+    mutable std::recursive_mutex remu_;
+    //mutable std::mutex mu_; //creates a mutex object
     float linear_x_;
     float angular_z_;
     // Input and physical limits
