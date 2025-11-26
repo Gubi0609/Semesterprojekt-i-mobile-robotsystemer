@@ -20,15 +20,15 @@ struct SingleToneConfig {
 
 // Multi-tone (chord) communication configuration
 struct ChordConfig {
-	// Frequency ranges for each of 4 tones
-	double tone1MinFreq = 5000.0;   // Tone 1: 5-8 kHz
-	double tone1MaxFreq = 8000.0;
-	double tone2MinFreq = 8500.0;   // Tone 2: 8.5-11.5 kHz
-	double tone2MaxFreq = 11500.0;
-	double tone3MinFreq = 12000.0;  // Tone 3: 12-15 kHz
-	double tone3MaxFreq = 15000.0;
-	double tone4MinFreq = 15500.0;  // Tone 4: 15.5-18.5 kHz
-	double tone4MaxFreq = 18500.0;
+	// Frequency ranges for each of 4 tones (adjusted for 18 kHz mic limit)
+	double tone1MinFreq = 4500.0;   // Tone 1: 4.5-7 kHz
+	double tone1MaxFreq = 7000.0;
+	double tone2MinFreq = 7500.0;   // Tone 2: 7.5-10 kHz
+	double tone2MaxFreq = 10000.0;
+	double tone3MinFreq = 10500.0;  // Tone 3: 10.5-13 kHz
+	double tone3MaxFreq = 13000.0;
+	double tone4MinFreq = 13500.0;  // Tone 4: 13.5-16 kHz (under 18 kHz limit!)
+	double tone4MaxFreq = 16000.0;
 
 	int bitsPerTone = 4;            // 4 bits per tone = 16 bits total
 	double toneDuration = 0.0;      // Duration (0 = infinite)
