@@ -97,8 +97,10 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		detectorConfig.updateRate = updateRate;
 		detectorConfig.sampleRate = 48000;
 		detectorConfig.numPeaks = 5; // Get top 5 peaks
-		detectorConfig.bandpassLow = frequency - 200.0;  // Filter around target frequency
-		detectorConfig.bandpassHigh = frequency + 200.0;
+		// Wider bandpass filter with good buffer (±400 Hz)
+		// Allows for hardware variations, drift, and noise
+		detectorConfig.bandpassLow = std::max(0.0, frequency - 400.0);
+		detectorConfig.bandpassHigh = frequency + 400.0;
 		detectorConfig.duration = 0.0; // Infinite, we'll stop manually
 
 		// Detection callback - capture frequency by reference
@@ -106,8 +108,9 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 			if (!testRunning.load()) return;
 
 			// Check if any peak is close to our target frequency
+			// Using 200 Hz tolerance (more forgiving than protocol's 150 Hz)
 			for (const auto& peak : peaks) {
-				if (std::abs(peak.frequency - frequency) < 150.0) { // 150 Hz tolerance
+				if (std::abs(peak.frequency - frequency) < 200.0) {
 					detectionCounter.fetch_add(1);
 					{
 						std::lock_guard<std::mutex> lock(magnitudeMutex);

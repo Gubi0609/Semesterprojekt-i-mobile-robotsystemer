@@ -124,7 +124,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       recvConfig.detectionTolerance = 150.0;
       recvConfig.minDetections = 2;       // CHANGED: Use safe mode (was 1)
       recvConfig.consistencyWindow = 0.3; // CHANGED: 0.3s window (was 0.1)
-      recvConfig.updateRate = 75;         // CHANGED: 75Hz update rate (was 100)
+      recvConfig.updateRate = 20;         // CHANGED: 20 Hz (was 50)
 
       //"lightweight duplicate-detection state local to this thread"
       uint16_t lastValue = 0;
