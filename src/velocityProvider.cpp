@@ -66,7 +66,7 @@ void VelocityProvider::update(){
 	} else if(state_ == State::DURATION){ //kan med fordel bruge switch (godt)
 
 			//indsæt logik til at checke at values nu ikke er lig prev values.
-			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration){
+			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration || std::chrono::steady_clock::now() >= end_time_){
 				updatePrevValues();
 				end_time_ = std::chrono::steady_clock::now() +
 					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
