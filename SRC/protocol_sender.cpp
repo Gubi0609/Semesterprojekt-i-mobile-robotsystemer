@@ -40,7 +40,7 @@ void sendCommand(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t co
 	if (waitAfter) {
 		std::cout << "Waiting for transmission to complete...\n";
 		transmitter.waitForCompletion();
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 }
 
