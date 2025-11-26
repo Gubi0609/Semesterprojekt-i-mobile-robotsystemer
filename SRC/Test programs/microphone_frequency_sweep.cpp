@@ -71,7 +71,7 @@ void printProgress(int current, int total) {
 	std::cout.flush();
 }
 
-FrequencyTestResult testSingleFrequency(double frequency, double testDuration, double transmitGain, bool doTransmit, bool doReceive) {
+FrequencyTestResult testSingleFrequency(double frequency, double testDuration, double transmitGain, bool doTransmit, bool doReceive, ToneGenerator* transmitter = nullptr) {
 	FrequencyTestResult result;
 	result.frequency = frequency;
 	result.detectionCount = 0;
@@ -128,13 +128,17 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		}
 
 		// Small delay to let receiver initialize
-		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
-
-	ToneGenerator transmitter;
 
 	// Setup transmitter (if needed)
 	if (doTransmit) {
+		if (!transmitter) {
+			std::cerr << "\n[ERROR] Transmitter is null but doTransmit is true\n";
+			if (doReceive) detector.stop();
+			return result;
+		}
+
 		ToneGenerator::Config txConfig;
 		txConfig.frequencies = {frequency};
 		txConfig.duration = testDuration;
@@ -143,15 +147,23 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		txConfig.sampleRate = 48000.0;
 		txConfig.channels = 2;
 
-		// Start transmitting ASYNCHRONOUSLY so receiver can listen simultaneously
-		if (!transmitter.startAsync(txConfig)) {
-			std::cerr << "\nFailed to start transmitter for " << frequency << " Hz\n";
+		// Use async mode for better control
+		bool txStarted = transmitter->startAsync(txConfig);
+		if (!txStarted) {
+			std::cerr << "\n[ERROR] Failed to start transmitter for " << frequency << " Hz\n";
+			std::cerr << "Check: Is audio output device available?\n";
 			if (doReceive) detector.stop();
 			return result;
 		}
 
 		// Wait for transmission to complete
-		transmitter.waitForCompletion();
+		transmitter->waitForCompletion();
+
+		// Explicitly stop transmitter to clean up audio device
+		transmitter->stop();
+
+		// Brief delay between tests
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	} else {
 		// If not transmitting, just wait for the test duration
 		std::this_thread::sleep_for(std::chrono::duration<double>(testDuration));
@@ -434,6 +446,12 @@ int main(int argc, char* argv[]) {
 	std::vector<FrequencyTestResult> results;
 	int testNum = 0;
 
+	// Create single transmitter instance if needed (reuse across all tests)
+	ToneGenerator* transmitter = nullptr;
+	if (doTransmit) {
+		transmitter = new ToneGenerator();
+	}
+
 	std::cout << "\n🔬 Testing " << frequenciesToTest.size() << " frequencies...\n\n";
 
 	for (double freq : frequenciesToTest) {
@@ -447,7 +465,7 @@ int main(int argc, char* argv[]) {
 		}
 		std::cout.flush();
 
-		FrequencyTestResult result = testSingleFrequency(freq, testDuration, transmitGain, doTransmit, doReceive);
+		FrequencyTestResult result = testSingleFrequency(freq, testDuration, transmitGain, doTransmit, doReceive, transmitter);
 		results.push_back(result);
 
 		if (doReceive) {
@@ -458,6 +476,14 @@ int main(int argc, char* argv[]) {
 		}
 
 		printProgress(testNum, frequenciesToTest.size());
+
+		// Brief pause between tests to ensure clean audio device state
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+	}
+
+	// Clean up transmitter
+	if (transmitter) {
+		delete transmitter;
 	}
 
 	std::cout << "\n\n[OK] Testing complete!\n";
