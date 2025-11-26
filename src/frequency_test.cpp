@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
 	signal(SIGTERM, signalHandler);
 
 	// Parse performance mode from command line
-	int perfMode = 1; // Default: balanced
+	int perfMode = 2; // Default: Fast mode (4096 FFT @ 20Hz)
 	if (argc > 1) {
 		perfMode = std::stoi(argv[1]);
 	}
@@ -296,25 +296,30 @@ int main(int argc, char* argv[]) {
 			updateRate = 5.0;
 			modeName = "Extreme Speed (Pi Optimized)";
 			break;
-		case 1: // Ultra-fast mode (lowest accuracy, highest speed)
+		case 1: // Ultra-fast mode
 			fftSize = 4096;
 			updateRate = 10.0;
-			modeName = "Ultra-Fast";
+			modeName = "Ultra-Fast (10Hz)";
 			break;
-		case 2: // Balanced mode (default)
+		case 2: // Fast mode - 4096 FFT at 20 Hz (NEW - good for Pi)
+			fftSize = 4096;
+			updateRate = 20.0;
+			modeName = "Fast (20Hz, 4096 FFT)";
+			break;
+		case 3: // Balanced mode
 			fftSize = 8192;
 			updateRate = 20.0;
-			modeName = "Balanced";
+			modeName = "Balanced (20Hz, 8192 FFT)";
 			break;
-		case 3: // Accurate mode
+		case 4: // Accurate mode
 			fftSize = 16384;
 			updateRate = 30.0;
 			modeName = "Accurate (Slower)";
 			break;
 		default:
 			fftSize = 4096;
-			updateRate = 10.0;
-			modeName = "Ultra-Fast (Default)";
+			updateRate = 20.0;
+			modeName = "Fast (Default)";
 			break;
 	}
 
@@ -381,10 +386,11 @@ int main(int argc, char* argv[]) {
 	std::cout << "5. Press Ctrl+C when done to see the full report\n\n";
 	std::cout << "TIP: Use ./BUILD/frequency_transmitter_test in another terminal\n\n";
 	std::cout << "PERFORMANCE MODES (pass as argument):\n";
-	std::cout << "  0 = Extreme Speed (FFT=2048, 5Hz)   - Pi optimized, lowest accuracy\n";
-	std::cout << "  1 = Ultra-Fast (FFT=4096, 10Hz)     - Default, fast\n";
-	std::cout << "  2 = Balanced (FFT=8192, 20Hz)       - More accurate\n";
-	std::cout << "  3 = Accurate (FFT=16384, 30Hz)      - Most accurate, slowest\n\n";
+	std::cout << "  0 = Extreme Speed (FFT=2048, 5Hz)      - Pi optimized, lowest accuracy\n";
+	std::cout << "  1 = Ultra-Fast (FFT=4096, 10Hz)        - Conservative speed\n";
+	std::cout << "  2 = Fast (FFT=4096, 20Hz)              - DEFAULT - Good for Pi\n";
+	std::cout << "  3 = Balanced (FFT=8192, 20Hz)          - More accurate, may be slow\n";
+	std::cout << "  4 = Accurate (FFT=16384, 30Hz)         - Most accurate, slowest\n\n";
 	std::cout << "═══════════════════════════════════════════════════════════════════════\n\n";
 
 	std::cout << "Starting receiver...\n";

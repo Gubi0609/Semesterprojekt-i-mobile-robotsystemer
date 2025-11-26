@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 	signal(SIGTERM, signalHandler);
 
 	// Parse performance mode
-	int perfMode = 1;
+	int perfMode = 2; // Default: Fast mode (4096 FFT @ 20Hz)
 	if (argc > 1) {
 		perfMode = std::stoi(argv[1]);
 	}
@@ -172,25 +172,30 @@ int main(int argc, char* argv[]) {
 			updateRate = 5.0;
 			modeName = "Extreme Speed (Pi Optimized)";
 			break;
-		case 1: // Ultra-fast (default)
+		case 1: // Ultra-fast
 			fftSize = 4096;
 			updateRate = 10.0;
-			modeName = "Ultra-Fast (Default)";
+			modeName = "Ultra-Fast (10Hz)";
 			break;
-		case 2: // Balanced
+		case 2: // Fast (default) - 4096 FFT at 20 Hz
+			fftSize = 4096;
+			updateRate = 20.0;
+			modeName = "Fast (20Hz, 4096 FFT) - DEFAULT";
+			break;
+		case 3: // Balanced
 			fftSize = 8192;
 			updateRate = 20.0;
-			modeName = "Balanced";
+			modeName = "Balanced (20Hz, 8192 FFT)";
 			break;
-		case 3: // Accurate
+		case 4: // Accurate
 			fftSize = 16384;
 			updateRate = 30.0;
 			modeName = "Accurate";
 			break;
 		default:
 			fftSize = 4096;
-			updateRate = 10.0;
-			modeName = "Ultra-Fast (Default)";
+			updateRate = 20.0;
+			modeName = "Fast (Default)";
 			break;
 	}
 
