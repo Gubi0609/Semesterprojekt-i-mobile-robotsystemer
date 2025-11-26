@@ -10,6 +10,8 @@
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "../LIB/audio_receiver.h"
+#include "../LIB/frequency_detector.h"
+#include "../LIB/audio_comm.h"
 #include "../INCLUDE/CRC.h"
 #include "../INCLUDE/command_protocol.h"
 
@@ -95,8 +97,11 @@ class RB3_cpp_publisher : public rclcpp::Node{
     CommandProtocol protocol;
 
     // Performance monitoring variables
-    std::atomic<int> totalCallbacks{0};
-    std::atomic<int> validChords{0};
+    std::atomic<int> totalFFTs{0};          // Count all FFT operations
+    std::atomic<int> totalDetections{0};     // Count chord detections
+    std::atomic<int> validChords{0};         // Count valid CRC chords
+    std::atomic<int> peaksDetected{0};       // Count total peaks
+    std::atomic<int> validFreqs{0};          // Count valid frequency peaks
     auto perfStartTime = std::chrono::steady_clock::now();
     auto lastPerfReport = std::chrono::steady_clock::now();
 
@@ -123,16 +128,27 @@ class RB3_cpp_publisher : public rclcpp::Node{
         provider->setState(VelocityProvider::State::IDLE);
       });
 
-  
- AudioComm::ChordReceiver receiver;
- AudioComm::ChordReceiver::Config recvConfig;
+  // Create decoder for chord analysis
+AudioComm::ChordConfig chordConfig;
+chordConfig.detectionTolerance = 150.0;
+auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 
- // FAST MODE settings (Mode 2): 4096 FFT @ 20Hz - optimized for Pi
- recvConfig.fftSize = 4096;          // CHANGED: 4096 for speed (was 16384)
- recvConfig.detectionTolerance = 150.0;
- recvConfig.minDetections = 2;       // Safe mode: require 2 detections
- recvConfig.consistencyWindow = 0.3; // 0.3s consistency window
- recvConfig.updateRate = 20.0;       // 20 Hz target update rate
+// Create low-level frequency detector to track all FFT operations
+FrequencyDetector freqDetector;
+FrequencyDetector::Config detConfig;
+
+// FAST MODE settings (Mode 2): 4096 FFT @ 20Hz - optimized for Pi
+detConfig.sampleRate = 48000;
+detConfig.fftSize = 4096;           // CHANGED: 4096 for speed (was 16384)
+detConfig.numPeaks = 10;            // Look for up to 10 peaks
+detConfig.duration = 0.0;           // Continuous
+detConfig.bandpassLow = 4000.0;     // Below tone 1
+detConfig.bandpassHigh = 17000.0;   // Above tone 4
+detConfig.updateRate = 20.0;        // 20 Hz target update rate
+
+// Consistency checking for chord detection
+const int minDetections = 2;
+const double consistencyWindow = 0.3;
 
       //"lightweight duplicate-detection state local to this thread"
       uint16_t lastValue = 0;
@@ -142,65 +158,147 @@ class RB3_cpp_publisher : public rclcpp::Node{
       const double RESTART_INTERVAL = 30.0;  // Restart mic if idle for 30 seconds
 
       // Calculate frequency resolution
-      double freqResolution = 48000.0 / recvConfig.fftSize;
+      double freqResolution = 48000.0 / detConfig.fftSize;
 
       RCLCPP_INFO(this->get_logger(), "Starting audio receiver thread...");
       RCLCPP_INFO(this->get_logger(), "Performance Mode: FAST (4096 FFT @ 20Hz)");
       RCLCPP_INFO(this->get_logger(), "FFT Size: %d, Frequency Resolution: %.2f Hz/bin",
-      						recvConfig.fftSize, freqResolution);
+      						detConfig.fftSize, freqResolution);
       RCLCPP_INFO(this->get_logger(), "Detection Tolerance: %.1f Hz, MinDetections: %d",
-      						recvConfig.detectionTolerance, recvConfig.minDetections);
+      						chordConfig.detectionTolerance, minDetections);
       RCLCPP_INFO(this->get_logger(), "Consistency Window: %.2fs, Target Update Rate: %.1f Hz",
-      						recvConfig.consistencyWindow, recvConfig.updateRate);
-      RCLCPP_INFO(this->get_logger(), "Performance logging enabled (reports every 30s)");
+      						consistencyWindow, detConfig.updateRate);
+      RCLCPP_INFO(this->get_logger(), "FFT-level performance logging enabled (reports every 30s)");
 
-       auto detectionCallback = [&](const AudioComm::ChordReceiver::Detection& det){
-      totalCallbacks++;  // Count every callback for performance monitoring
+      // Chord candidate tracking
+      struct ChordCandidate {
+      	int32_t value;
+      	int count;
+      	std::chrono::steady_clock::time_point firstSeen;
+      	std::chrono::steady_clock::time_point lastSeen;
+      };
+      std::map<int32_t, ChordCandidate> chordCandidates;
 
-      RCLCPP_INFO(this->get_logger(), "🎵 RAW AUDIO DETECTED! Value: 0x%04X", det.value);
+      // Low-level FFT callback - called for EVERY FFT operation
+      auto fftCallback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks){
+      	totalFFTs++;  // Count every FFT operation
+      	peaksDetected += peaks.size();
 
-      auto now = std::chrono::steady_clock::now();
+      	auto now = std::chrono::steady_clock::now();
 
-      // Update activity time on every detection
-      lastActivityTime = now;
+      	// Analyze peaks to find tones
+      	std::map<int, int> tonesFound;
 
-      if(lastValue == det.value){
-        double elapsed = std::chrono::duration<double>(now - lastTimestamp).count();
-        if(elapsed < LOCKOUT_PERIOD) { //ignore duplicate
-      	RCLCPP_INFO(this->get_logger(), "🔄 DUPLICATE ignored (%.2fs ago)", elapsed);
-      	return;
-        }
-      }
-      lastValue = det.value;
-      lastTimestamp = now;
-        
-        if(!crc.verify(det.value)){
-          RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "CRC failed for detection value 0x%04X", det.value);
-          return;
-        } else {
-          RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "✅ CRC PASSED for 0x%04X", det.value);
-        }
+      	for (const auto& peak : peaks) {
+      		if (!decoder->isValidFrequency(peak.frequency)) {
+      			continue;
+      		}
 
-        auto decoded = crc.decode1612(det.value);
-        if(!decoded.has_value()){
-          RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "Decode failed for 0x%04X", det.value);
-          return;
-      }
-      uint16_t command = decoded.value();
-      validChords++;  // Count valid chords for performance monitoring
-      RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
-      protocol.processCommand(command);
+      		validFreqs++;
 
-       };
+      		auto [toneIndex, toneValue] = decoder->decodeSingleFrequency(peak.frequency);
+      		if (toneIndex >= 0 && toneValue >= 0) {
+      			if (tonesFound.find(toneIndex) == tonesFound.end()) {
+      				tonesFound[toneIndex] = toneValue;
+      			}
+      		}
+      	}
 
-      bool started = receiver.startReceiving(recvConfig, detectionCallback);
+      	// Check if we have all 4 tones (complete chord)
+      	if (tonesFound.size() == 4) {
+      		// Build frequency vector
+      		std::vector<double> detectedFreqs(4);
+      		for (int i = 0; i < 4; ++i) {
+      			int toneValue = tonesFound[i];
+      			double minFreq, maxFreq;
+      			switch(i) {
+      				case 0: minFreq = 4500.0; maxFreq = 7000.0; break;
+      				case 1: minFreq = 7500.0; maxFreq = 10000.0; break;
+      				case 2: minFreq = 10500.0; maxFreq = 13000.0; break;
+      				case 3: minFreq = 13500.0; maxFreq = 16000.0; break;
+      				default: minFreq = maxFreq = 0;
+      			}
+      			double freqStep = (maxFreq - minFreq) / 15.0;
+      			detectedFreqs[i] = minFreq + (toneValue * freqStep);
+      		}
+
+      		int32_t decodedValue = decoder->decodeFrequencies(detectedFreqs);
+
+      		if (decodedValue >= 0) {
+      			// Clean up old candidates
+      			auto it = chordCandidates.begin();
+      			while (it != chordCandidates.end()) {
+      				double age = std::chrono::duration<double>(now - it->second.firstSeen).count();
+      				if (age > consistencyWindow) {
+      					it = chordCandidates.erase(it);
+      				} else {
+      					++it;
+      				}
+      			}
+
+      			// Update or create candidate
+      			if (chordCandidates.find(decodedValue) == chordCandidates.end()) {
+      				chordCandidates[decodedValue] = {decodedValue, 1, now, now};
+      			} else {
+      				chordCandidates[decodedValue].count++;
+      				chordCandidates[decodedValue].lastSeen = now;
+      			}
+
+      			// Check if confirmed
+      			auto& candidate = chordCandidates[decodedValue];
+      			if (candidate.count >= minDetections) {
+      				double timeSinceLast = std::chrono::duration<double>(now - lastTimestamp).count();
+
+      				if (decodedValue != lastValue || timeSinceLast > LOCKOUT_PERIOD) {
+      					totalDetections++;
+      					lastActivityTime = now;
+
+      					uint16_t chordValue = static_cast<uint16_t>(decodedValue);
+      					RCLCPP_INFO(this->get_logger(), "🎵 CHORD DETECTED! Value: 0x%04X", chordValue);
+
+      					// Verify CRC
+      					if(!crc.verify(chordValue)){
+      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ CRC failed for 0x%04X", chordValue);
+      						chordCandidates.erase(decodedValue);
+      						lastValue = decodedValue;
+      						lastTimestamp = now;
+      						return;
+      					}
+
+      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "✅ CRC PASSED for 0x%04X", chordValue);
+
+      					// Decode command
+      					auto decoded = crc.decode1612(chordValue);
+      					if(!decoded.has_value()){
+      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ Decode failed for 0x%04X", chordValue);
+      						chordCandidates.erase(decodedValue);
+      						lastValue = decodedValue;
+      						lastTimestamp = now;
+      						return;
+      					}
+
+      					uint16_t command = decoded.value();
+      					validChords++;
+      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
+      					protocol.processCommand(command);
+
+      					lastValue = decodedValue;
+      					lastTimestamp = now;
+      					chordCandidates.erase(decodedValue);
+      				}
+      			}
+      		}
+      	}
+      };
+
+      bool started = freqDetector.startAsync(detConfig, fftCallback);
       if(!started){
-        RCLCPP_ERROR(this->get_logger(), "❌ Audio receiver failed to start");
-        receiver_running_.store(false);
-        return;
+      	RCLCPP_ERROR(this->get_logger(), "❌ Frequency detector failed to start");
+      	receiver_running_.store(false);
+      	return;
       } else {
-        RCLCPP_INFO(this->get_logger(), "✅ Audio receiver started successfully!");
-        RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
+      	RCLCPP_INFO(this->get_logger(), "✅ Frequency detector started successfully!");
+      	RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
       }
 
   		//run until asked to stop with periodic microphone restart and performance reporting
@@ -213,23 +311,35 @@ class RB3_cpp_publisher : public rclcpp::Node{
   			auto timeSinceLastReport = std::chrono::duration<double>(now - lastPerfReport).count();
   			if (timeSinceLastReport >= 30.0) {
   				auto totalRuntime = std::chrono::duration<double>(now - perfStartTime).count();
-  				double detectionRate = totalCallbacks.load() / totalRuntime;
+  				double fftRate = totalFFTs.load() / totalRuntime;
+  				double detectionRate = totalDetections.load() / totalRuntime;
   				double validRate = validChords.load() / totalRuntime;
+  				double avgPeaksPerFFT = totalFFTs.load() > 0 ?
+  					(double)peaksDetected.load() / totalFFTs.load() : 0.0;
 
   				RCLCPP_INFO(this->get_logger(), "");
   				RCLCPP_INFO(this->get_logger(), "📊 ===== PERFORMANCE REPORT =====");
   				RCLCPP_INFO(this->get_logger(), "📊 Runtime: %.1f seconds", totalRuntime);
-  				RCLCPP_INFO(this->get_logger(), "📊 Total Detections: %d", totalCallbacks.load());
-  				RCLCPP_INFO(this->get_logger(), "📊 Detection Rate: %.2f Hz", detectionRate);
-  				RCLCPP_INFO(this->get_logger(), "📊 Valid Commands: %d", validChords.load());
-  				RCLCPP_INFO(this->get_logger(), "📊 Valid Command Rate: %.2f Hz", validRate);
+  				RCLCPP_INFO(this->get_logger(), "📊 FFT Processing:");
+  				RCLCPP_INFO(this->get_logger(), "📊   Total FFTs: %d", totalFFTs.load());
+  				RCLCPP_INFO(this->get_logger(), "📊   FFT Rate: %.2f Hz", fftRate);
+  				RCLCPP_INFO(this->get_logger(), "📊   Total Peaks: %d", peaksDetected.load());
+  				RCLCPP_INFO(this->get_logger(), "📊   Valid Freqs: %d", validFreqs.load());
+  				RCLCPP_INFO(this->get_logger(), "📊   Avg Peaks/FFT: %.2f", avgPeaksPerFFT);
+  				RCLCPP_INFO(this->get_logger(), "📊 Chord Detection:");
+  				RCLCPP_INFO(this->get_logger(), "📊   Chord Detections: %d", totalDetections.load());
+  				RCLCPP_INFO(this->get_logger(), "📊   Detection Rate: %.2f Hz", detectionRate);
+  				RCLCPP_INFO(this->get_logger(), "📊   Valid Commands: %d", validChords.load());
+  				RCLCPP_INFO(this->get_logger(), "📊   Valid Rate: %.2f Hz", validRate);
 
-  				if (detectionRate < 5.0) {
-  					RCLCPP_WARN(this->get_logger(), "⚠️  Detection rate is low (< 5 Hz) - system may be slow");
-  				} else if (detectionRate >= 15.0) {
-  					RCLCPP_INFO(this->get_logger(), "✅ Detection rate is good (>= 15 Hz)");
+  				if (fftRate < 5.0) {
+  					RCLCPP_WARN(this->get_logger(), "⚠️  FFT rate is very low (< 5 Hz) - CPU too slow or FFT too large");
+  				} else if (fftRate < 15.0) {
+  					RCLCPP_WARN(this->get_logger(), "⚠️  FFT rate is below target (< 15 Hz) - may cause delays");
+  				} else if (fftRate >= 18.0) {
+  					RCLCPP_INFO(this->get_logger(), "✅ FFT rate is excellent (>= 18 Hz)");
   				} else {
-  					RCLCPP_INFO(this->get_logger(), "✓ Detection rate is acceptable (5-15 Hz)");
+  					RCLCPP_INFO(this->get_logger(), "✓ FFT rate is good (15-18 Hz)");
   				}
   				RCLCPP_INFO(this->get_logger(), "📊 ==============================");
   				RCLCPP_INFO(this->get_logger(), "");
@@ -243,12 +353,12 @@ class RB3_cpp_publisher : public rclcpp::Node{
   			if (timeSinceActivity >= RESTART_INTERVAL) {
   				RCLCPP_INFO(this->get_logger(), "⟳ Idle for %.0fs - Restarting microphone...", RESTART_INTERVAL);
 
-  				// Stop receiver
-  				receiver.stop();
+  				// Stop detector
+  				freqDetector.stop();
   				std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Brief pause
 
-  				// Restart receiver with same config and callback
-  				started = receiver.startReceiving(recvConfig, detectionCallback);
+  				// Restart detector with same config and callback
+  				started = freqDetector.startAsync(detConfig, fftCallback);
 
   				if (started) {
   					RCLCPP_INFO(this->get_logger(), "✓ Microphone restarted successfully");
@@ -260,27 +370,37 @@ class RB3_cpp_publisher : public rclcpp::Node{
   				lastActivityTime = std::chrono::steady_clock::now();
   				perfStartTime = std::chrono::steady_clock::now();
   				lastPerfReport = std::chrono::steady_clock::now();
-  				totalCallbacks.store(0);
+  				totalFFTs.store(0);
+  				totalDetections.store(0);
   				validChords.store(0);
+  				peaksDetected.store(0);
+  				validFreqs.store(0);
   			}
   		}
 
   		//cleanup
-  		receiver.stop();
+  		freqDetector.stop();
 
   		// Final performance report
   		auto endTime = std::chrono::steady_clock::now();
   		auto totalRuntime = std::chrono::duration<double>(endTime - perfStartTime).count();
-  		double avgDetectionRate = totalCallbacks.load() / totalRuntime;
+  		double avgFFTRate = totalFFTs.load() / totalRuntime;
+  		double avgDetectionRate = totalDetections.load() / totalRuntime;
   		double avgValidRate = validChords.load() / totalRuntime;
 
   		RCLCPP_INFO(this->get_logger(), "");
   		RCLCPP_INFO(this->get_logger(), "📊 ===== FINAL PERFORMANCE REPORT =====");
   		RCLCPP_INFO(this->get_logger(), "📊 Total Runtime: %.1f seconds", totalRuntime);
-  		RCLCPP_INFO(this->get_logger(), "📊 Total Detections: %d", totalCallbacks.load());
-  		RCLCPP_INFO(this->get_logger(), "📊 Average Detection Rate: %.2f Hz", avgDetectionRate);
-  		RCLCPP_INFO(this->get_logger(), "📊 Total Valid Commands: %d", validChords.load());
-  		RCLCPP_INFO(this->get_logger(), "📊 Average Valid Command Rate: %.2f Hz", avgValidRate);
+  		RCLCPP_INFO(this->get_logger(), "📊 FFT Statistics:");
+  		RCLCPP_INFO(this->get_logger(), "📊   Total FFTs: %d", totalFFTs.load());
+  		RCLCPP_INFO(this->get_logger(), "📊   Average FFT Rate: %.2f Hz", avgFFTRate);
+  		RCLCPP_INFO(this->get_logger(), "📊   Total Peaks: %d", peaksDetected.load());
+  		RCLCPP_INFO(this->get_logger(), "📊   Valid Frequencies: %d", validFreqs.load());
+  		RCLCPP_INFO(this->get_logger(), "📊 Chord Detection:");
+  		RCLCPP_INFO(this->get_logger(), "📊   Total Chord Detections: %d", totalDetections.load());
+  		RCLCPP_INFO(this->get_logger(), "📊   Average Detection Rate: %.2f Hz", avgDetectionRate);
+  		RCLCPP_INFO(this->get_logger(), "📊   Total Valid Commands: %d", validChords.load());
+  		RCLCPP_INFO(this->get_logger(), "📊   Average Valid Command Rate: %.2f Hz", avgValidRate);
   		RCLCPP_INFO(this->get_logger(), "📊 ======================================");
   		RCLCPP_INFO(this->get_logger(), "");
   		RCLCPP_INFO(this->get_logger(), "Audio receiver thread stopped");
