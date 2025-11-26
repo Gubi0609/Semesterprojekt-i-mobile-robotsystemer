@@ -143,8 +143,8 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		txConfig.sampleRate = 48000.0;
 		txConfig.channels = 2;
 
-		// Start transmitting
-		if (!transmitter.start(txConfig)) {
+		// Start transmitting ASYNCHRONOUSLY so receiver can listen simultaneously
+		if (!transmitter.startAsync(txConfig)) {
 			std::cerr << "\nFailed to start transmitter for " << frequency << " Hz\n";
 			if (doReceive) detector.stop();
 			return result;
