@@ -58,22 +58,27 @@ void VelocityProvider::update(){
 		//switch(receiver.get(currentSignal)):  //currentSignal har værdier.
 		// case : 255:
 		//	state_ = State::IDLE;
-		
+
 		if(angular_z_!= 0.0f || linear_x_ != 0.0f){
 			angular_z_ = 0.0f;
 			linear_x_ = 0.0f;
 		}
+		// Reset previous values when IDLE so duplicate commands work
+		prev_angular_z_ = 0.0f;
+		prev_linear_x_ = 0.0f;
+		prev_custom_duration = 0.0;
+		prev_state_ = State::IDLE;
 	} else if(state_ == State::DURATION){ //kan med fordel bruge switch (godt)
 
 			//indsæt logik til at checke at values nu ikke er lig prev values.
-			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration || std::chrono::steady_clock::now() >= end_time_){
+			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration){
 				updatePrevValues();
 				end_time_ = std::chrono::steady_clock::now() +
 					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
 
 			}
 			checkDurationExpiry();
-	}			
+	}
 }
 
 void VelocityProvider::setState(State state){
