@@ -1,6 +1,7 @@
 #include "../../LIB/audio_transmitter.h"
 #include "../../LIB/audio_receiver.h"
 #include "../../LIB/frequency_detector.h"
+#include "../../LIB/tone_generator.h"
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <csignal>
+#include <mutex>
 
 // [!]  IMPORTANT USAGE NOTES:
 //
@@ -43,8 +45,10 @@ struct FrequencyTestResult {
 
 // Global variables for detection callback
 std::atomic<int> detectionCounter{0};
-std::atomic<double> totalMagnitude{0.0};
 std::atomic<bool> testRunning{false};
+// Note: std::atomic<double> doesn't have fetch_add in C++17, so use mutex
+std::mutex magnitudeMutex;
+double totalMagnitude = 0.0;
 
 void printHeader() {
 	std::cout << "\n╔════════════════════════════════════════════════════════════╗\n";
@@ -77,7 +81,10 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 
 	// Reset counters
 	detectionCounter.store(0);
-	totalMagnitude.store(0.0);
+	{
+		std::lock_guard<std::mutex> lock(magnitudeMutex);
+		totalMagnitude = 0.0;
+	}
 	testRunning.store(true);
 
 	FrequencyDetector detector;
@@ -102,7 +109,10 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 			for (const auto& peak : peaks) {
 				if (std::abs(peak.frequency - frequency) < 150.0) { // 150 Hz tolerance
 					detectionCounter.fetch_add(1);
-					totalMagnitude.fetch_add(peak.magnitude);
+					{
+						std::lock_guard<std::mutex> lock(magnitudeMutex);
+						totalMagnitude += peak.magnitude;
+					}
 					break; // Only count once per callback
 				}
 			}
@@ -156,7 +166,11 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 	// Calculate results (only valid if receiving)
 	if (doReceive) {
 		result.detectionCount = detectionCounter.load();
-		double totalMag = totalMagnitude.load();
+		double totalMag;
+		{
+			std::lock_guard<std::mutex> lock(magnitudeMutex);
+			totalMag = totalMagnitude;
+		}
 
 		// Expected detections = testDuration * updateRate
 		int expectedDetections = static_cast<int>(testDuration * updateRate);
