@@ -81,18 +81,24 @@ class RB3_cpp_publisher : public rclcpp::Node{
     publisher_->publish(msg);
   }
 
-  void startProtocolReceiver(){
-    //avoid starting multiple threads
-    if(receiver_running_.load()) return;
-    //writes atomic flag to true (threadsafe, and use the flag to tell the receiver thread to stop lateron)
-    receiver_running_.store(true);
+   void startProtocolReceiver(){
+  //avoid starting multiple threads
+  if(receiver_running_.load()) return;
+  //writes atomic flag to true (threadsafe, and use the flag to tell the receiver thread to stop lateron)
+  receiver_running_.store(true);
 
-    //copy the ptr to provider (not the same as provider in main)
-    std::shared_ptr<VelocityProvider> provider = provider_;
+  //copy the ptr to provider (not the same as provider in main)
+  std::shared_ptr<VelocityProvider> provider = provider_;
 
-    receiver_thread_ = std::thread([this, provider](){
-      CRC crc;
-      CommandProtocol protocol;
+  receiver_thread_ = std::thread([this, provider](){
+    CRC crc;
+    CommandProtocol protocol;
+
+    // Performance monitoring variables
+    std::atomic<int> totalCallbacks{0};
+    std::atomic<int> validChords{0};
+    auto perfStartTime = std::chrono::steady_clock::now();
+    auto lastPerfReport = std::chrono::steady_clock::now();
 
       //map protocol callbacks -> provider actions
       protocol.setDriveForDurationCallback([provider](const DriveForDurationCommand& cmd){
@@ -118,13 +124,15 @@ class RB3_cpp_publisher : public rclcpp::Node{
       });
 
   
-      AudioComm::ChordReceiver receiver;
-      AudioComm::ChordReceiver::Config recvConfig;
-      recvConfig.fftSize = 16384;
-      recvConfig.detectionTolerance = 150.0;
-      recvConfig.minDetections = 2;       // CHANGED: Use safe mode (was 1)
-      recvConfig.consistencyWindow = 0.3; // CHANGED: 0.3s window (was 0.1)
-      recvConfig.updateRate = 20;         // CHANGED: 20 Hz (was 50)
+ AudioComm::ChordReceiver receiver;
+ AudioComm::ChordReceiver::Config recvConfig;
+
+ // FAST MODE settings (Mode 2): 4096 FFT @ 20Hz - optimized for Pi
+ recvConfig.fftSize = 4096;          // CHANGED: 4096 for speed (was 16384)
+ recvConfig.detectionTolerance = 150.0;
+ recvConfig.minDetections = 2;       // Safe mode: require 2 detections
+ recvConfig.consistencyWindow = 0.3; // 0.3s consistency window
+ recvConfig.updateRate = 20.0;       // 20 Hz target update rate
 
       //"lightweight duplicate-detection state local to this thread"
       uint16_t lastValue = 0;
@@ -133,13 +141,22 @@ class RB3_cpp_publisher : public rclcpp::Node{
       const double LOCKOUT_PERIOD = 0.8;
       const double RESTART_INTERVAL = 30.0;  // Restart mic if idle for 30 seconds
 
+      // Calculate frequency resolution
+      double freqResolution = 48000.0 / recvConfig.fftSize;
+
       RCLCPP_INFO(this->get_logger(), "Starting audio receiver thread...");
-      RCLCPP_INFO(this->get_logger(), "FFT Size: %d, Tolerance: %.1f Hz, MinDetections: %d",
-      						recvConfig.fftSize, recvConfig.detectionTolerance, recvConfig.minDetections);
-      RCLCPP_INFO(this->get_logger(), "Consistency Window: %.2fs, Update Rate: %.1f Hz",
+      RCLCPP_INFO(this->get_logger(), "Performance Mode: FAST (4096 FFT @ 20Hz)");
+      RCLCPP_INFO(this->get_logger(), "FFT Size: %d, Frequency Resolution: %.2f Hz/bin",
+      						recvConfig.fftSize, freqResolution);
+      RCLCPP_INFO(this->get_logger(), "Detection Tolerance: %.1f Hz, MinDetections: %d",
+      						recvConfig.detectionTolerance, recvConfig.minDetections);
+      RCLCPP_INFO(this->get_logger(), "Consistency Window: %.2fs, Target Update Rate: %.1f Hz",
       						recvConfig.consistencyWindow, recvConfig.updateRate);
+      RCLCPP_INFO(this->get_logger(), "Performance logging enabled (reports every 30s)");
 
        auto detectionCallback = [&](const AudioComm::ChordReceiver::Detection& det){
+      totalCallbacks++;  // Count every callback for performance monitoring
+
       RCLCPP_INFO(this->get_logger(), "🎵 RAW AUDIO DETECTED! Value: 0x%04X", det.value);
 
       auto now = std::chrono::steady_clock::now();
@@ -168,12 +185,13 @@ class RB3_cpp_publisher : public rclcpp::Node{
         if(!decoded.has_value()){
           RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "Decode failed for 0x%04X", det.value);
           return;
-        }
-        uint16_t command = decoded.value();
-        RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
-        protocol.processCommand(command);
+      }
+      uint16_t command = decoded.value();
+      validChords++;  // Count valid chords for performance monitoring
+      RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
+      protocol.processCommand(command);
 
-      };
+       };
 
       bool started = receiver.startReceiving(recvConfig, detectionCallback);
       if(!started){
@@ -185,12 +203,41 @@ class RB3_cpp_publisher : public rclcpp::Node{
         RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
       }
 
-  		//run until asked to stop with periodic microphone restart
+  		//run until asked to stop with periodic microphone restart and performance reporting
   		while(receiver_running_.load()){
   			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  			// Check if we need to restart the microphone (when idle)
   			auto now = std::chrono::steady_clock::now();
+
+  			// Performance reporting every 30 seconds
+  			auto timeSinceLastReport = std::chrono::duration<double>(now - lastPerfReport).count();
+  			if (timeSinceLastReport >= 30.0) {
+  				auto totalRuntime = std::chrono::duration<double>(now - perfStartTime).count();
+  				double detectionRate = totalCallbacks.load() / totalRuntime;
+  				double validRate = validChords.load() / totalRuntime;
+
+  				RCLCPP_INFO(this->get_logger(), "");
+  				RCLCPP_INFO(this->get_logger(), "📊 ===== PERFORMANCE REPORT =====");
+  				RCLCPP_INFO(this->get_logger(), "📊 Runtime: %.1f seconds", totalRuntime);
+  				RCLCPP_INFO(this->get_logger(), "📊 Total Detections: %d", totalCallbacks.load());
+  				RCLCPP_INFO(this->get_logger(), "📊 Detection Rate: %.2f Hz", detectionRate);
+  				RCLCPP_INFO(this->get_logger(), "📊 Valid Commands: %d", validChords.load());
+  				RCLCPP_INFO(this->get_logger(), "📊 Valid Command Rate: %.2f Hz", validRate);
+
+  				if (detectionRate < 5.0) {
+  					RCLCPP_WARN(this->get_logger(), "⚠️  Detection rate is low (< 5 Hz) - system may be slow");
+  				} else if (detectionRate >= 15.0) {
+  					RCLCPP_INFO(this->get_logger(), "✅ Detection rate is good (>= 15 Hz)");
+  				} else {
+  					RCLCPP_INFO(this->get_logger(), "✓ Detection rate is acceptable (5-15 Hz)");
+  				}
+  				RCLCPP_INFO(this->get_logger(), "📊 ==============================");
+  				RCLCPP_INFO(this->get_logger(), "");
+
+  				lastPerfReport = now;
+  			}
+
+  			// Check if we need to restart the microphone (when idle)
   			auto timeSinceActivity = std::chrono::duration<double>(now - lastActivityTime).count();
 
   			if (timeSinceActivity >= RESTART_INTERVAL) {
@@ -209,13 +256,33 @@ class RB3_cpp_publisher : public rclcpp::Node{
   					RCLCPP_ERROR(this->get_logger(), "✗ ERROR: Failed to restart microphone!");
   				}
 
-  				// Reset activity timer
+  				// Reset activity timer and performance counters
   				lastActivityTime = std::chrono::steady_clock::now();
+  				perfStartTime = std::chrono::steady_clock::now();
+  				lastPerfReport = std::chrono::steady_clock::now();
+  				totalCallbacks.store(0);
+  				validChords.store(0);
   			}
   		}
 
   		//cleanup
   		receiver.stop();
+
+  		// Final performance report
+  		auto endTime = std::chrono::steady_clock::now();
+  		auto totalRuntime = std::chrono::duration<double>(endTime - perfStartTime).count();
+  		double avgDetectionRate = totalCallbacks.load() / totalRuntime;
+  		double avgValidRate = validChords.load() / totalRuntime;
+
+  		RCLCPP_INFO(this->get_logger(), "");
+  		RCLCPP_INFO(this->get_logger(), "📊 ===== FINAL PERFORMANCE REPORT =====");
+  		RCLCPP_INFO(this->get_logger(), "📊 Total Runtime: %.1f seconds", totalRuntime);
+  		RCLCPP_INFO(this->get_logger(), "📊 Total Detections: %d", totalCallbacks.load());
+  		RCLCPP_INFO(this->get_logger(), "📊 Average Detection Rate: %.2f Hz", avgDetectionRate);
+  		RCLCPP_INFO(this->get_logger(), "📊 Total Valid Commands: %d", validChords.load());
+  		RCLCPP_INFO(this->get_logger(), "📊 Average Valid Command Rate: %.2f Hz", avgValidRate);
+  		RCLCPP_INFO(this->get_logger(), "📊 ======================================");
+  		RCLCPP_INFO(this->get_logger(), "");
   		RCLCPP_INFO(this->get_logger(), "Audio receiver thread stopped");
 
   	});
