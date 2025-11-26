@@ -315,12 +315,12 @@ int main(int argc, char* argv[]) {
 	AudioComm::ChordReceiver receiver;
 	AudioComm::ChordReceiver::Config recvConfig;
 
-	// High-resolution FFT for accurate frequency detection
-	recvConfig.fftSize = 16384;
+	// Optimized for Raspberry Pi - smaller FFT, lower update rate
+	recvConfig.fftSize = 8192;     // Reduced from 16384 for speed
 	recvConfig.detectionTolerance = 150.0;
 	recvConfig.minDetections = 1;  // Accept single detections for testing
 	recvConfig.consistencyWindow = 0.5;
-	recvConfig.updateRate = 50.0;  // Fast updates
+	recvConfig.updateRate = 20.0;  // Reduced from 50 for Pi performance
 
 	std::cout << "Receiver Configuration:\n";
 	std::cout << "  FFT Size: " << recvConfig.fftSize << " samples\n";
@@ -347,7 +347,7 @@ int main(int argc, char* argv[]) {
 	auto startTime = std::chrono::steady_clock::now();
 	int totalDetections = 0;
 
-	// Detection callback
+	// Detection callback (minimal output for speed)
 	auto detectionCallback = [&](const AudioComm::ChordReceiver::Detection& det) {
 		totalDetections++;
 		auto now = std::chrono::steady_clock::now();
@@ -381,15 +381,8 @@ int main(int argc, char* argv[]) {
 					stats.avgDetectedFreq = sum / stats.detectedFrequencies.size();
 					stats.freqDeviation = stats.avgDetectedFreq - stats.targetFreq;
 
-					// Print live detection
-					std::cout << "[" << std::fixed << std::setprecision(2)
-							  << std::chrono::duration<double>(now - startTime).count()
-							  << "s] Detected: Tone " << toneIndex
-							  << ", Value " << std::setw(2) << decodedValue
-							  << " | Target: " << std::setw(7) << std::setprecision(1) << stats.targetFreq
-							  << " Hz | Detected: " << std::setw(7) << detectedFreq
-							  << " Hz | Deviation: " << std::setw(6) << std::showpos << stats.freqDeviation
-							  << std::noshowpos << " Hz | Count: " << stats.detectionCount << "\n";
+					// Simple dot output for progress (no expensive string formatting)
+					std::cout << "." << std::flush;
 				}
 			}
 		}
@@ -404,23 +397,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	std::cout << "✓ Receiver started successfully\n";
-	std::cout << "Monitoring for frequency detections...\n\n";
+	std::cout << "Monitoring for frequency detections...\n";
+	std::cout << "(Each '.' represents a detected frequency)\n\n";
 
-	// Keep running until interrupted
-	auto lastStatsUpdate = std::chrono::steady_clock::now();
-	const double STATS_INTERVAL = 10.0; // Print stats every 10 seconds
-
+	// Keep running until interrupted (no periodic stats for speed)
 	while (running) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-		auto now = std::chrono::steady_clock::now();
-		auto timeSinceLastStats = std::chrono::duration<double>(now - lastStatsUpdate).count();
-
-		// Print periodic statistics
-		if (timeSinceLastStats >= STATS_INTERVAL) {
-			printCurrentStatistics();
-			lastStatsUpdate = now;
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
 	// Stop receiver
