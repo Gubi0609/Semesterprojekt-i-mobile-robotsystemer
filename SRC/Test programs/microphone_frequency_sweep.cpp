@@ -12,7 +12,7 @@
 #include <sstream>
 #include <csignal>
 
-// ⚠️  IMPORTANT USAGE NOTES:
+// [!]  IMPORTANT USAGE NOTES:
 //
 // This program tests microphone frequency response by transmitting and receiving.
 //
@@ -81,26 +81,35 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 	testRunning.store(true);
 
 	FrequencyDetector detector;
+	const double updateRate = 50.0;
 
 	// Setup receiver (if needed)
 	if (doReceive) {
 		FrequencyDetector::Config detectorConfig;
-		detectorConfig.targetFrequency = frequency;
-		detectorConfig.tolerance = 150.0; // Wide tolerance for testing
 		detectorConfig.fftSize = 16384;
-		detectorConfig.updateRate = 50.0; // 50 Hz update rate
-		detectorConfig.sampleRate = 48000.0;
+		detectorConfig.updateRate = updateRate;
+		detectorConfig.sampleRate = 48000;
+		detectorConfig.numPeaks = 5; // Get top 5 peaks
+		detectorConfig.bandpassLow = frequency - 200.0;  // Filter around target frequency
+		detectorConfig.bandpassHigh = frequency + 200.0;
+		detectorConfig.duration = 0.0; // Infinite, we'll stop manually
 
-		// Detection callback
-		auto onDetection = [](const FrequencyDetector::Detection& det) {
-			if (testRunning.load()) {
-				detectionCounter.fetch_add(1);
-				totalMagnitude.fetch_add(det.magnitude);
+		// Detection callback - capture frequency by reference
+		auto onDetection = [frequency](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
+			if (!testRunning.load()) return;
+
+			// Check if any peak is close to our target frequency
+			for (const auto& peak : peaks) {
+				if (std::abs(peak.frequency - frequency) < 150.0) { // 150 Hz tolerance
+					detectionCounter.fetch_add(1);
+					totalMagnitude.fetch_add(peak.magnitude);
+					break; // Only count once per callback
+				}
 			}
 		};
 
 		// Start receiver
-		if (!detector.startDetecting(detectorConfig, onDetection)) {
+		if (!detector.startAsync(detectorConfig, onDetection)) {
 			std::cerr << "\nFailed to start detector for " << frequency << " Hz\n";
 			return result;
 		}
@@ -119,6 +128,7 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		txConfig.gain = transmitGain;
 		txConfig.fadeTime = 0.05;
 		txConfig.sampleRate = 48000.0;
+		txConfig.channels = 2;
 
 		// Start transmitting
 		if (!transmitter.start(txConfig)) {
@@ -148,8 +158,8 @@ FrequencyTestResult testSingleFrequency(double frequency, double testDuration, d
 		result.detectionCount = detectionCounter.load();
 		double totalMag = totalMagnitude.load();
 
-		// Expected detections = testDuration * updateRate (50 Hz)
-		int expectedDetections = static_cast<int>(testDuration * 50.0);
+		// Expected detections = testDuration * updateRate
+		int expectedDetections = static_cast<int>(testDuration * updateRate);
 		result.detectionRate = (result.detectionCount * 100.0) / expectedDetections;
 		result.avgMagnitude = (result.detectionCount > 0) ? (totalMag / result.detectionCount) : 0.0;
 		result.reliable = (result.detectionRate >= 80.0);
@@ -212,13 +222,13 @@ void printSummary(const std::vector<FrequencyTestResult>& results) {
 	}
 
 	// Print detailed results
-	std::cout << "\n" << std::string(70, '─') << "\n";
+	std::cout << "\n" << std::string(70, '-') << "\n";
 	std::cout << std::left << std::setw(12) << "Frequency"
 			  << std::setw(12) << "Detections"
 			  << std::setw(15) << "Rate (%)"
 			  << std::setw(15) << "Avg Mag"
 			  << std::setw(10) << "Status\n";
-	std::cout << std::string(70, '─') << "\n";
+	std::cout << std::string(70, '-') << "\n";
 
 	for (const auto& result : results) {
 		std::cout << std::fixed << std::setprecision(1);
@@ -226,12 +236,12 @@ void printSummary(const std::vector<FrequencyTestResult>& results) {
 				  << std::setw(12) << result.detectionCount
 				  << std::setw(15) << result.detectionRate
 				  << std::setw(15) << std::setprecision(4) << result.avgMagnitude
-				  << (result.reliable ? "✓ GOOD" : "✗ POOR") << "\n";
+				  << (result.reliable ? "OK GOOD" : "X POOR") << "\n";
 	}
-	std::cout << std::string(70, '─') << "\n";
+	std::cout << std::string(70, '-') << "\n";
 
 	// Identify problem ranges
-	std::cout << "\n📊 ANALYSIS:\n";
+	std::cout << "\n[*] ANALYSIS:\n";
 
 	std::vector<std::pair<double, double>> problemRanges;
 	bool inProblemRange = false;
@@ -251,32 +261,32 @@ void printSummary(const std::vector<FrequencyTestResult>& results) {
 	}
 
 	if (problemRanges.empty()) {
-		std::cout << "✅ All frequencies responded well!\n";
+		std::cout << "[OK] All frequencies responded well!\n";
 	} else {
-		std::cout << "⚠️  Problem frequency ranges detected:\n";
+		std::cout << "[!]  Problem frequency ranges detected:\n";
 		for (const auto& range : problemRanges) {
-			std::cout << "   • " << std::fixed << std::setprecision(0)
+			std::cout << "   * " << std::fixed << std::setprecision(0)
 					  << range.first << " - " << range.second << " Hz\n";
 		}
 	}
 
 	// Recommendations
-	std::cout << "\n💡 RECOMMENDATIONS:\n";
+	std::cout << "\n[*] RECOMMENDATIONS:\n";
 	if (maxReliableFreq < 16000) {
-		std::cout << "   ⚠️  Microphone upper limit appears to be around "
+		std::cout << "   [!]  Microphone upper limit appears to be around "
 				  << std::fixed << std::setprecision(0) << maxReliableFreq << " Hz\n";
-		std::cout << "   → Consider adjusting tone ranges to stay below this frequency\n";
+		std::cout << "   -> Consider adjusting tone ranges to stay below this frequency\n";
 	}
 	if (minReliableFreq > 5000) {
-		std::cout << "   ⚠️  Microphone lower limit appears to be around "
+		std::cout << "   [!]  Microphone lower limit appears to be around "
 				  << std::fixed << std::setprecision(0) << minReliableFreq << " Hz\n";
-		std::cout << "   → Consider adjusting tone ranges to stay above this frequency\n";
+		std::cout << "   -> Consider adjusting tone ranges to stay above this frequency\n";
 	}
 	if (reliableCount < results.size() * 0.7) {
-		std::cout << "   ⚠️  Less than 70% of frequencies are reliable\n";
-		std::cout << "   → Check microphone hardware and connections\n";
-		std::cout << "   → Try adjusting transmitter gain\n";
-		std::cout << "   → Ensure minimal background noise\n";
+		std::cout << "   [!]  Less than 70% of frequencies are reliable\n";
+		std::cout << "   -> Check microphone hardware and connections\n";
+		std::cout << "   -> Try adjusting transmitter gain\n";
+		std::cout << "   -> Ensure minimal background noise\n";
 	}
 }
 
@@ -375,27 +385,27 @@ int main(int argc, char* argv[]) {
 			  << (frequenciesToTest.size() * (testDuration + 0.5)) / 60.0
 			  << " minutes\n\n";
 
-	std::cout << "📝 Instructions:\n";
+	std::cout << "[*] Instructions:\n";
 	if (runMode == "both") {
-		std::cout << "   ⚠️  BOTH mode: Using same device for TX and RX\n";
-		std::cout << "   • Use EXTERNAL speaker and microphone\n";
-		std::cout << "   • Separate them by at least 1 meter\n";
-		std::cout << "   • May experience feedback - reduce gain if needed\n";
+		std::cout << "   [!]  BOTH mode: Using same device for TX and RX\n";
+		std::cout << "   * Use EXTERNAL speaker and microphone\n";
+		std::cout << "   * Separate them by at least 1 meter\n";
+		std::cout << "   * May experience feedback - reduce gain if needed\n";
 	} else if (runMode == "transmit") {
-		std::cout << "   📤 TRANSMIT ONLY mode\n";
-		std::cout << "   • This device will play test tones through speakers\n";
-		std::cout << "   • Start the RECEIVE program on another device first\n";
-		std::cout << "   • Place devices ~1 meter apart\n";
+		std::cout << "   [TX] TRANSMIT ONLY mode\n";
+		std::cout << "   * This device will play test tones through speakers\n";
+		std::cout << "   * Start the RECEIVE program on another device first\n";
+		std::cout << "   * Place devices ~1 meter apart\n";
 	} else {
-		std::cout << "   📥 RECEIVE ONLY mode\n";
-		std::cout << "   • This device will listen with microphone\n";
-		std::cout << "   • Start the TRANSMIT program on another device\n";
-		std::cout << "   • Place devices ~1 meter apart\n";
+		std::cout << "   [RX] RECEIVE ONLY mode\n";
+		std::cout << "   * This device will listen with microphone\n";
+		std::cout << "   * Start the TRANSMIT program on another device\n";
+		std::cout << "   * Place devices ~1 meter apart\n";
 	}
-	std::cout << "   • Ensure quiet environment with minimal background noise\n";
-	std::cout << "   • Do not move or touch equipment during test\n";
+	std::cout << "   * Ensure quiet environment with minimal background noise\n";
+	std::cout << "   * Do not move or touch equipment during test\n";
 	if (doReceive) {
-		std::cout << "   • Results will be saved to CSV file at end\n";
+		std::cout << "   * Results will be saved to CSV file at end\n";
 	}
 	std::cout << "\n";
 
@@ -413,10 +423,10 @@ int main(int argc, char* argv[]) {
 		testNum++;
 
 		if (doTransmit) {
-			std::cout << "📤 Transmitting " << std::fixed << std::setprecision(1) << freq << " Hz... ";
+			std::cout << "[TX] Transmitting " << std::fixed << std::setprecision(1) << freq << " Hz... ";
 		}
 		if (doReceive) {
-			std::cout << "📥 Testing " << std::fixed << std::setprecision(1) << freq << " Hz... ";
+			std::cout << "[RX] Testing " << std::fixed << std::setprecision(1) << freq << " Hz... ";
 		}
 		std::cout.flush();
 
@@ -425,7 +435,7 @@ int main(int argc, char* argv[]) {
 
 		if (doReceive) {
 			std::cout << result.detectionRate << "% detected ";
-			std::cout << (result.reliable ? "✓" : "✗") << "\n";
+			std::cout << (result.reliable ? "OK" : "X") << "\n";
 		} else {
 			std::cout << "done\n";
 		}
@@ -433,7 +443,7 @@ int main(int argc, char* argv[]) {
 		printProgress(testNum, frequenciesToTest.size());
 	}
 
-	std::cout << "\n\n✅ Testing complete!\n";
+	std::cout << "\n\n[OK] Testing complete!\n";
 
 	// Only save/display results if we were receiving
 	if (!doReceive) {
