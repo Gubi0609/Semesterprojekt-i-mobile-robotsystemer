@@ -142,8 +142,8 @@ detConfig.sampleRate = 48000;
 detConfig.fftSize = 4096;           // CHANGED: 4096 for speed (was 16384)
 detConfig.numPeaks = 10;            // Look for up to 10 peaks
 detConfig.duration = 0.0;           // Continuous
-detConfig.bandpassLow = 4000.0;     // Below tone 1
-detConfig.bandpassHigh = 17000.0;   // Above tone 4
+detConfig.bandpassLow = 0.0;        // DISABLED: No bandpass filtering (was 4000.0)
+detConfig.bandpassHigh = 0.0;       // DISABLED: No bandpass filtering (was 17000.0)
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
 
 // Consistency checking for chord detection
@@ -164,6 +164,7 @@ const double consistencyWindow = 0.3;
       RCLCPP_INFO(this->get_logger(), "Performance Mode: FAST (4096 FFT @ 20Hz)");
       RCLCPP_INFO(this->get_logger(), "FFT Size: %d, Frequency Resolution: %.2f Hz/bin",
       						detConfig.fftSize, freqResolution);
+      RCLCPP_INFO(this->get_logger(), "Bandpass Filter: DISABLED (full spectrum)");
       RCLCPP_INFO(this->get_logger(), "Detection Tolerance: %.1f Hz, MinDetections: %d",
       						chordConfig.detectionTolerance, minDetections);
       RCLCPP_INFO(this->get_logger(), "Consistency Window: %.2fs, Target Update Rate: %.1f Hz",
