@@ -122,9 +122,9 @@ class RB3_cpp_publisher : public rclcpp::Node{
       AudioComm::ChordReceiver::Config recvConfig;
       recvConfig.fftSize = 16384;
       recvConfig.detectionTolerance = 150.0;
-      recvConfig.minDetections = 2;
-      recvConfig.consistencyWindow = 0.3;
-      recvConfig.updateRate = 75.0;
+      recvConfig.minDetections = 1;
+      recvConfig.consistencyWindow = 0.1;
+      recvConfig.updateRate = 100;
 
       //"lightweight duplicate-detection state local to this thread"
       uint16_t lastValue = 0;
