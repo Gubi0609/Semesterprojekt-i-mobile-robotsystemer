@@ -280,6 +280,48 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
 
+	// Parse performance mode from command line
+	int perfMode = 1; // Default: balanced
+	if (argc > 1) {
+		perfMode = std::stoi(argv[1]);
+	}
+
+	int fftSize;
+	double updateRate;
+	std::string modeName;
+
+	switch(perfMode) {
+		case 0: // Extreme speed mode
+			fftSize = 2048;
+			updateRate = 5.0;
+			modeName = "Extreme Speed (Pi Optimized)";
+			break;
+		case 1: // Ultra-fast mode (lowest accuracy, highest speed)
+			fftSize = 4096;
+			updateRate = 10.0;
+			modeName = "Ultra-Fast";
+			break;
+		case 2: // Balanced mode (default)
+			fftSize = 8192;
+			updateRate = 20.0;
+			modeName = "Balanced";
+			break;
+		case 3: // Accurate mode
+			fftSize = 16384;
+			updateRate = 30.0;
+			modeName = "Accurate (Slower)";
+			break;
+		default:
+			fftSize = 4096;
+			updateRate = 10.0;
+			modeName = "Ultra-Fast (Default)";
+			break;
+	}
+
+	std::cout << "Performance Mode: " << modeName << "\n";
+	std::cout << "  FFT Size: " << fftSize << "\n";
+	std::cout << "  Target Update Rate: " << updateRate << " Hz\n\n";
+
 	// Create encoder to know what frequencies to expect
 	AudioComm::ChordConfig config;
 	AudioComm::ChordEncoder encoder(config);
@@ -315,12 +357,12 @@ int main(int argc, char* argv[]) {
 	AudioComm::ChordReceiver receiver;
 	AudioComm::ChordReceiver::Config recvConfig;
 
-	// Optimized for Raspberry Pi - smaller FFT, lower update rate
-	recvConfig.fftSize = 8192;     // Reduced from 16384 for speed
+	// Use performance mode settings
+	recvConfig.fftSize = fftSize;
 	recvConfig.detectionTolerance = 150.0;
 	recvConfig.minDetections = 1;  // Accept single detections for testing
 	recvConfig.consistencyWindow = 0.5;
-	recvConfig.updateRate = 20.0;  // Reduced from 50 for Pi performance
+	recvConfig.updateRate = updateRate;
 
 	std::cout << "Receiver Configuration:\n";
 	std::cout << "  FFT Size: " << recvConfig.fftSize << " samples\n";
@@ -337,8 +379,12 @@ int main(int argc, char* argv[]) {
 	std::cout << "3. Let the test run for at least 30-60 seconds\n";
 	std::cout << "4. The tool will track which frequencies are detected\n";
 	std::cout << "5. Press Ctrl+C when done to see the full report\n\n";
-	std::cout << "TIP: Use a protocol transmitter or generate test tones covering\n";
-	std::cout << "     the full range of values (0x000 to 0xFFF)\n\n";
+	std::cout << "TIP: Use ./BUILD/frequency_transmitter_test in another terminal\n\n";
+	std::cout << "PERFORMANCE MODES (pass as argument):\n";
+	std::cout << "  0 = Extreme Speed (FFT=2048, 5Hz)   - Pi optimized, lowest accuracy\n";
+	std::cout << "  1 = Ultra-Fast (FFT=4096, 10Hz)     - Default, fast\n";
+	std::cout << "  2 = Balanced (FFT=8192, 20Hz)       - More accurate\n";
+	std::cout << "  3 = Accurate (FFT=16384, 30Hz)      - Most accurate, slowest\n\n";
 	std::cout << "═══════════════════════════════════════════════════════════════════════\n\n";
 
 	std::cout << "Starting receiver...\n";
@@ -346,13 +392,15 @@ int main(int argc, char* argv[]) {
 
 	auto startTime = std::chrono::steady_clock::now();
 	int totalDetections = 0;
+	std::atomic<int> totalCallbacks(0);  // Track how many times callback is called (FFT runs)
 
 	// Detection callback (minimal output for speed)
 	auto detectionCallback = [&](const AudioComm::ChordReceiver::Detection& det) {
-		totalDetections++;
+		totalCallbacks++;  // Count every FFT processing callback
 		auto now = std::chrono::steady_clock::now();
 
 		// Process each detected frequency
+		bool foundAny = false;
 		for (size_t i = 0; i < det.frequencies.size() && i < det.toneValues.size(); ++i) {
 			double detectedFreq = det.frequencies[i];
 			uint8_t toneValue = det.toneValues[i];
@@ -370,21 +418,25 @@ int main(int argc, char* argv[]) {
 					stats.detectionCount++;
 					stats.totalMagnitude += det.magnitude;
 					stats.avgMagnitude = stats.totalMagnitude / stats.detectionCount;
-					stats.detectedFrequencies.push_back(detectedFreq);
+
+					// Only store limited history to avoid performance issues
+					if (stats.detectedFrequencies.size() < 100) {
+						stats.detectedFrequencies.push_back(detectedFreq);
+					}
 					stats.lastDetection = now;
 
-					// Calculate average detected frequency and deviation
-					double sum = 0.0;
-					for (double f : stats.detectedFrequencies) {
-						sum += f;
-					}
-					stats.avgDetectedFreq = sum / stats.detectedFrequencies.size();
+					// Calculate average detected frequency and deviation (optimized)
+					stats.avgDetectedFreq = (stats.avgDetectedFreq * (stats.detectionCount - 1) + detectedFreq) / stats.detectionCount;
 					stats.freqDeviation = stats.avgDetectedFreq - stats.targetFreq;
 
-					// Simple dot output for progress (no expensive string formatting)
-					std::cout << "." << std::flush;
+					foundAny = true;
 				}
 			}
+		}
+
+		if (foundAny) {
+			totalDetections++;
+			std::cout << "." << std::flush;  // Simple dot output for progress
 		}
 	};
 
@@ -400,9 +452,28 @@ int main(int argc, char* argv[]) {
 	std::cout << "Monitoring for frequency detections...\n";
 	std::cout << "(Each '.' represents a detected frequency)\n\n";
 
-	// Keep running until interrupted (no periodic stats for speed)
+	// Keep running until interrupted
+	// Print FFT rate every 5 seconds to monitor performance
+	auto lastRateCheck = std::chrono::steady_clock::now();
+	int lastCallbackCount = 0;
+
 	while (running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		auto now = std::chrono::steady_clock::now();
+		auto elapsed = std::chrono::duration<double>(now - lastRateCheck).count();
+
+		if (elapsed >= 5.0) {
+			int callbacksSinceLastCheck = totalCallbacks - lastCallbackCount;
+			double fftRate = callbacksSinceLastCheck / elapsed;
+
+			std::cout << "\n[FFT Rate: " << std::fixed << std::setprecision(1)
+					  << fftRate << " Hz] ";
+			std::cout.flush();
+
+			lastRateCheck = now;
+			lastCallbackCount = totalCallbacks;
+		}
 	}
 
 	// Stop receiver
@@ -419,6 +490,9 @@ int main(int argc, char* argv[]) {
 	double testDuration = std::chrono::duration<double>(endTime - startTime).count();
 
 	std::cout << "\nTest Duration: " << std::fixed << std::setprecision(1) << testDuration << " seconds\n";
+	std::cout << "Total FFT Callbacks: " << totalCallbacks << "\n";
+	std::cout << "Average FFT Rate: " << std::fixed << std::setprecision(2)
+			  << (totalCallbacks / testDuration) << " Hz\n";
 	std::cout << "Total Detections: " << totalDetections << "\n";
 
 	printCurrentStatistics();
