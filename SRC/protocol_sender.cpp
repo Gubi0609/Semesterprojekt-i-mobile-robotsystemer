@@ -46,11 +46,22 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 		feedbackReceived.store(false);
 
-		// Start feedback listener if enabled
+		// Send via audio
+		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
+		AudioComm::ChordTransmitter::Config config;
+		config.toneDuration = duration;
+		if (!transmitter.startTransmitting(encoded[0], config)) {
+			std::cerr << "❌ Failed to start transmission!\n";
+			return;
+		}
+
+		// Start feedback listener AFTER 100ms delay (avoid previous confirmation)
 		FrequencyDetector detector;
 		std::atomic<bool> stopListening{false};
 
 		if (waitForFeedback) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 			FrequencyDetector::Config detConfig;
 			detConfig.sampleRate = 48000;
 			detConfig.fftSize = 4096;
@@ -72,27 +83,17 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 				}
 			};
 
-			std::cout << "🎤 Listening for feedback (3.5 kHz)...\n";
+			std::cout << "🎤 Listening for feedback (3.5 kHz) after 100ms...\n";
 			detector.startAsync(detConfig, callback);
-		}
-
-		// Send via audio
-		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
-		AudioComm::ChordTransmitter::Config config;
-		config.toneDuration = duration;
-		if (!transmitter.startTransmitting(encoded[0], config)) {
-			std::cerr << "❌ Failed to start transmission!\n";
-			detector.stop();
-			return;
 		}
 
 		transmitter.waitForCompletion();
 
 		if (waitForFeedback) {
-			// Wait additional 0.7s for feedback (0.2s tone + 0.5s grace period)
+			// Wait additional 0.4s for feedback (0.1s tone + 0.3s grace period)
 			std::cout << "⏳ Waiting for feedback...\n";
 			auto startWait = std::chrono::steady_clock::now();
-			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.7) {
+			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.4) {
 				if (feedbackReceived.load()) {
 					success = true;
 					break;
@@ -121,7 +122,8 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 		std::cout << "⚠️  WARNING: No confirmation after " << maxAttempts << " attempts\n";
 	}
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	// No delay needed - listener starts 100ms after transmission begins
+	// This naturally spaces out commands without explicit delays
 }
 
 // Legacy function for compatibility
@@ -384,6 +386,7 @@ int main() {
 				std::cin >> speed;
 
 				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+				// Use 100ms delay instead of 500ms for faster sequences
 				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
 				sendCommandWithRetry(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION),
 				                     "Mode: DRIVE_FOR_DURATION", 0.8, true, true);
