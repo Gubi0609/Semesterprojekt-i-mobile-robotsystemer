@@ -143,7 +143,7 @@ const double FEEDBACK_FAILURE_FREQ = 19500.0;  // Failure/error tone
 const double FEEDBACK_DURATION = 0.15;          // 150ms tone
 
 // Helper function to play feedback sound
-auto playFeedbackSound = [feedbackToneGen](double frequency) {
+auto playFeedbackSound = [feedbackToneGen, FEEDBACK_DURATION](double frequency) {
 	ToneGenerator::Config feedbackConfig;
 	feedbackConfig.frequencies = {frequency};
 	feedbackConfig.duration = FEEDBACK_DURATION;
@@ -282,7 +282,7 @@ const double consistencyWindow = 0.3;
       					if(!crc.verify(chordValue)){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ CRC failed for 0x%04X", chordValue);
       						// Play failure sound (19.5 kHz)
-      						std::thread([playFeedbackSound]() {
+      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
       						}).detach();
       						chordCandidates.erase(decodedValue);
@@ -298,7 +298,7 @@ const double consistencyWindow = 0.3;
       					if(!decoded.has_value()){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ Decode failed for 0x%04X", chordValue);
       						// Play failure sound (19.5 kHz)
-      						std::thread([playFeedbackSound]() {
+      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
       						}).detach();
       						chordCandidates.erase(decodedValue);
@@ -312,7 +312,7 @@ const double consistencyWindow = 0.3;
       					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
 
       					// Play success sound (18.5 kHz) before processing command
-      					std::thread([playFeedbackSound]() {
+      					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
       						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
       					}).detach();
 
