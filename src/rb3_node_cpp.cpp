@@ -481,7 +481,7 @@ const double consistencyWindow = 0.3;
 			auto toneGen = std::make_shared<ToneGenerator>();
 			const double SUCCESS_FREQ = 3500.0;
 			const double FAILURE_FREQ = 4500.0;
-			const double DURATION = 0.5  // 500ms for testing;
+			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this, toneGen, DURATION](double freq, const char* name) {
 				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz for %.1fs", name, freq, DURATION);
