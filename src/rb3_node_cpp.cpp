@@ -131,7 +131,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;
-chordConfig.detectionTolerance = 50.0;  // CHANGED: Narrowed from 150 Hz to 50 Hz
+chordConfig.detectionTolerance = 150.0;  // REVERTED: Back to 150 Hz (was 50 Hz)
 auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 
 // Create tone generator for feedback sounds (18-20 kHz band)
@@ -168,7 +168,7 @@ detConfig.bandpassHigh = 0.0;       // DISABLED: No bandpass filtering (was 1700
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
 
 // Consistency checking for chord detection
-const int minDetections = 3;  // CHANGED: Increased from 2 to 3 detections
+const int minDetections = 2;  // REVERTED: Back to 2 detections (was 3)
 const double consistencyWindow = 0.3;
 
       //"lightweight duplicate-detection state local to this thread"
