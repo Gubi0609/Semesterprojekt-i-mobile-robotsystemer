@@ -146,19 +146,24 @@ auto feedbackToneGen = std::make_shared<ToneGenerator>();
 // Feedback sound configurations (3-5 kHz band - audible range)
 const double FEEDBACK_SUCCESS_FREQ = 3500.0;  // Success confirmation (3.5 kHz)
 const double FEEDBACK_FAILURE_FREQ = 4500.0;  // Failure/error tone (4.5 kHz)
-const double FEEDBACK_DURATION = 0.15;         // 150ms tone
+const double FEEDBACK_DURATION = 0.5;          // 500ms tone (increased for testing)
 
-// Helper function to play feedback sound
+// Helper function to play feedback sound - capture all needed variables
 auto playFeedbackSound = [this, feedbackToneGen, FEEDBACK_DURATION](double frequency) {
-	RCLCPP_INFO(this->get_logger(), "🔊 Playing feedback tone: %.0f Hz", frequency);
+	RCLCPP_INFO(this->get_logger(), "🔊 Playing feedback tone: %.0f Hz for %.1fs", frequency, FEEDBACK_DURATION);
 	ToneGenerator::Config feedbackConfig;
 	feedbackConfig.frequencies = {frequency};
 	feedbackConfig.duration = FEEDBACK_DURATION;
-	feedbackConfig.gain = 0.3;  // Lower gain for feedback
+	feedbackConfig.gain = 0.5;  // Increased gain for better audibility
 	feedbackConfig.sampleRate = 48000.0;
 	feedbackConfig.channels = 2;
 	feedbackConfig.fadeTime = 0.01;
-	feedbackToneGen->start(feedbackConfig);
+	bool started = feedbackToneGen->start(feedbackConfig);
+	if (started) {
+		RCLCPP_INFO(this->get_logger(), "✅ Tone started successfully");
+	} else {
+		RCLCPP_ERROR(this->get_logger(), "❌ Failed to start tone!");
+	}
 };
 
 // Create low-level frequency detector to track all FFT operations
@@ -476,18 +481,23 @@ const double consistencyWindow = 0.3;
 			auto toneGen = std::make_shared<ToneGenerator>();
 			const double SUCCESS_FREQ = 3500.0;
 			const double FAILURE_FREQ = 4500.0;
-			const double DURATION = 0.15;
+			const double DURATION = 0.5  // 500ms for testing;
 
 			auto playTone = [this, toneGen, DURATION](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz for %.1fs", name, freq, DURATION);
 				ToneGenerator::Config config;
 				config.frequencies = {freq};
 				config.duration = DURATION;
-				config.gain = 0.3;
+				config.gain = 0.8;  // Higher gain for testing
 				config.sampleRate = 48000.0;
 				config.channels = 2;
 				config.fadeTime = 0.01;
-				toneGen->start(config);
+				bool started = toneGen->start(config);
+				if (started) {
+					RCLCPP_INFO(this->get_logger(), "✅ Tone started successfully");
+				} else {
+					RCLCPP_ERROR(this->get_logger(), "❌ Failed to start tone!");
+				}
 			};
 
 			while(keyboard_running_.load()) {
