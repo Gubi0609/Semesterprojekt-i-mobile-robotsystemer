@@ -27,7 +27,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
     : Node("rb3_cpp_publisher"), provider_(provider) {
       RCLCPP_INFO(this->get_logger(), "Node started successfully!");
       publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("cmd_vel",10);
-      timer_ = this->create_wall_timer(1000ms, std::bind(&RB3_cpp_publisher::publish_vel, this));
+      timer_ = this->create_wall_timer(100ms, std::bind(&RB3_cpp_publisher::publish_vel, this));  // CHANGED: 1000ms -> 100ms (10Hz)
     
 
     //start the protocol receiver thread if provider present
@@ -80,7 +80,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
     }
 
-    RCLCPP_INFO(this->get_logger(), "Publishing: %f , %f", this->msg.twist.linear.x, this->msg.twist.angular.z);
+    // RCLCPP_INFO(this->get_logger(), "Publishing: %f , %f", this->msg.twist.linear.x, this->msg.twist.angular.z);  // REMOVED: Too spammy
     publisher_->publish(msg);
   }
 
@@ -131,7 +131,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;
-chordConfig.detectionTolerance = 150.0;  // REVERTED: Back to 150 Hz (was 50 Hz)
+chordConfig.detectionTolerance = 50.0;  // CHANGED: Narrowed from 150 Hz to 50 Hz
 auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 
 // Create tone generator for feedback sounds (18-20 kHz band)
@@ -143,7 +143,8 @@ const double FEEDBACK_FAILURE_FREQ = 19500.0;  // Failure/error tone
 const double FEEDBACK_DURATION = 0.15;          // 150ms tone
 
 // Helper function to play feedback sound
-auto playFeedbackSound = [feedbackToneGen, FEEDBACK_DURATION](double frequency) {
+auto playFeedbackSound = [this, feedbackToneGen, FEEDBACK_DURATION](double frequency) {
+	RCLCPP_INFO(this->get_logger(), "🔊 Playing feedback tone: %.0f Hz", frequency);
 	ToneGenerator::Config feedbackConfig;
 	feedbackConfig.frequencies = {frequency};
 	feedbackConfig.duration = FEEDBACK_DURATION;
@@ -168,7 +169,7 @@ detConfig.bandpassHigh = 0.0;       // DISABLED: No bandpass filtering (was 1700
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
 
 // Consistency checking for chord detection
-const int minDetections = 2;  // REVERTED: Back to 2 detections (was 3)
+const int minDetections = 3;  // CHANGED: Increased from 2 to 3 detections
 const double consistencyWindow = 0.3;
 
       //"lightweight duplicate-detection state local to this thread"
