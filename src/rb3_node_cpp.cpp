@@ -47,19 +47,6 @@ class RB3_cpp_publisher : public rclcpp::Node{
     msg.header.frame_id = "base_link";
 
     if (provider_) {
-      // if(provider_->getPreFunc() == 0 && provider_->state() == VelocityProvider::State::IDLE){
-      //   provider_->updatePreFunc(1);
-      //   provider_-> forwardForDuration(10.0, 50);
-      // }
-      // if(provider_->getPreFunc() ==1 && provider_->state() == VelocityProvider::State::IDLE){
-      //   provider_ ->updatePreFunc(2);
-      //   provider_-> turnForDuration(5.0, 50);
-      // }
-      // if(provider_->getPreFunc() ==2 && provider_->state() == VelocityProvider::State::IDLE){
-      //   provider_ ->updatePreFunc(3);
-      //   provider_-> turnForDuration(5.0, -50);
-      // }
-
       provider_->update();
       msg.twist.linear.x = provider_->getVel();
       msg.twist.angular.z = provider_->getRot();
@@ -126,6 +113,30 @@ class RB3_cpp_publisher : public rclcpp::Node{
         provider->setVel(0.0f);
         provider->setRot(0.0f);
         provider->setState(VelocityProvider::State::IDLE);
+      });
+
+      protocol.setDriveForwardCallback([provider](const DriveForwardCommand& cmd){
+        if(!provider) return;
+        float speed = cmd.getSpeedPercent();
+        // Set continuous forward drive at specified speed (0-100 range)
+        provider->setVel(speed);  // VelocityProvider expects 0-100 range directly
+        provider->setRot(0.0f);   // No rotation for forward drive
+        provider->setState(VelocityProvider::State::IDLE);  // Continuous mode uses IDLE state
+      });
+
+      protocol.setTurnCallback([provider](const TurnCommand& cmd){
+        if(!provider) return;
+        float turnRate = cmd.getTurnRatePercent();
+        // Set continuous turn at specified rate (-100 to +100 range)
+        provider->setVel(0.0f);     // No forward movement for pure turn
+        provider->setRot(turnRate); // VelocityProvider expects -100 to +100 range directly
+        provider->setState(VelocityProvider::State::IDLE);  // Continuous mode uses IDLE state
+      });
+
+      protocol.setModeChangeCallback([this](RobotMode mode){
+        RCLCPP_INFO(this->get_logger(), "🔄 Mode changed to: %s", 
+                    CommandProtocol::modeToString(mode).c_str());
+        // You can add additional mode-specific logic here if needed
       });
 
   // Create decoder for chord analysis
