@@ -4,6 +4,9 @@
 #include <chrono>
 #include <stdlib.h>
 #include <optional>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
@@ -30,16 +33,19 @@ class RB3_cpp_publisher : public rclcpp::Node{
       timer_ = this->create_wall_timer(100ms, std::bind(&RB3_cpp_publisher::publish_vel, this));  // CHANGED: 1000ms -> 100ms (10Hz)
     
 
-    //start the protocol receiver thread if provider present
-    if(provider_){
-      startProtocolReceiver();
-    }
+  	//start the protocol receiver thread if provider present
+  	if(provider_){
+  		startProtocolReceiver();
+  		startKeyboardListener();  // Start keyboard listener for manual feedback testing
+  	}
   }
 
   //stop the thread cleanly
   ~RB3_cpp_publisher() override{
-    receiver_running_.store(false);
-    if (receiver_thread_.joinable()) receiver_thread_.join();
+  	receiver_running_.store(false);
+  	keyboard_running_.store(false);
+  	if (receiver_thread_.joinable()) receiver_thread_.join();
+  	if (keyboard_thread_.joinable()) keyboard_thread_.join();
   }
 
   private:
@@ -442,17 +448,78 @@ const double consistencyWindow = 0.3;
   		RCLCPP_INFO(this->get_logger(), "");
   		RCLCPP_INFO(this->get_logger(), "Audio receiver thread stopped");
 
-  	});
-  }
+		});
+	}
 
-  rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
-  geometry_msgs::msg::TwistStamped msg;
+	void startKeyboardListener() {
+		if(keyboard_running_.load()) return;
+		keyboard_running_.store(true);
 
-  std::shared_ptr<VelocityProvider> provider_;
+		keyboard_thread_ = std::thread([this]() {
+			// Set terminal to non-blocking mode
+			struct termios oldt, newt;
+			tcgetattr(STDIN_FILENO, &oldt);
+			newt = oldt;
+			newt.c_lflag &= ~(ICANON | ECHO);
+			tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-  std::thread receiver_thread_;
-  std::atomic<bool> receiver_running_{false};  
+			int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+			fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+			RCLCPP_INFO(this->get_logger(), "");
+			RCLCPP_INFO(this->get_logger(), "🎹 Keyboard Controls:");
+			RCLCPP_INFO(this->get_logger(), "  Press 's' - Play SUCCESS tone (18.5 kHz)");
+			RCLCPP_INFO(this->get_logger(), "  Press 'f' - Play FAILURE tone (19.5 kHz)");
+			RCLCPP_INFO(this->get_logger(), "  Press 'q' - Quit keyboard listener");
+			RCLCPP_INFO(this->get_logger(), "");
+
+			auto toneGen = std::make_shared<ToneGenerator>();
+			const double SUCCESS_FREQ = 18500.0;
+			const double FAILURE_FREQ = 19500.0;
+			const double DURATION = 0.15;
+
+			auto playTone = [this, toneGen, DURATION](double freq, const char* name) {
+				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				ToneGenerator::Config config;
+				config.frequencies = {freq};
+				config.duration = DURATION;
+				config.gain = 0.3;
+				config.sampleRate = 48000.0;
+				config.channels = 2;
+				config.fadeTime = 0.01;
+				toneGen->start(config);
+			};
+
+			while(keyboard_running_.load()) {
+				char c = getchar();
+				if (c == 's' || c == 'S') {
+					playTone(SUCCESS_FREQ, "SUCCESS");
+				} else if (c == 'f' || c == 'F') {
+					playTone(FAILURE_FREQ, "FAILURE");
+				} else if (c == 'q' || c == 'Q') {
+					RCLCPP_INFO(this->get_logger(), "🎹 Keyboard listener stopped");
+					keyboard_running_.store(false);
+					break;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			}
+
+			// Restore terminal settings
+			tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+			fcntl(STDIN_FILENO, F_SETFL, oldf);
+		});
+	}
+
+	rclcpp::TimerBase::SharedPtr timer_;
+	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+	geometry_msgs::msg::TwistStamped msg;
+
+	std::shared_ptr<VelocityProvider> provider_;
+
+	std::thread receiver_thread_;
+	std::atomic<bool> receiver_running_{false};
+	std::thread keyboard_thread_;
+	std::atomic<bool> keyboard_running_{false};
 };
 // ...existing code...
 int main(int argc, char ** argv)
