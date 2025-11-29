@@ -12,6 +12,8 @@
 #include "../LIB/audio_receiver.h"
 #include "../LIB/frequency_detector.h"
 #include "../LIB/audio_comm.h"
+#include "../LIB/tone_generator.h"
+#include "../LIB/audio_transmitter.h"
 #include "../INCLUDE/CRC.h"
 #include "../INCLUDE/command_protocol.h"
 
@@ -130,8 +132,23 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;
-chordConfig.detectionTolerance = 150.0;
+chordConfig.detectionTolerance = 50.0;  // CHANGED: Narrowed from 150 Hz to 50 Hz
 auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
+
+// Create audio transmitter for feedback sounds (18-20 kHz band)
+auto transmitter = std::make_shared<AudioComm::AudioTransmitter>();
+auto toneGen = std::make_shared<ToneGenerator>();
+
+// Feedback sound configurations (18-20 kHz band)
+const double FEEDBACK_SUCCESS_FREQ = 18500.0;  // Success confirmation
+const double FEEDBACK_FAILURE_FREQ = 19500.0;  // Failure/error tone
+const double FEEDBACK_DURATION = 0.15;          // 150ms tone
+
+// Helper function to play feedback sound
+auto playFeedbackSound = [&](double frequency) {
+	std::vector<int16_t> samples = toneGen->generateTone(frequency, FEEDBACK_DURATION);
+	transmitter->sendSync(samples);
+};
 
 // Create low-level frequency detector to track all FFT operations
 FrequencyDetector freqDetector;
@@ -147,7 +164,7 @@ detConfig.bandpassHigh = 0.0;       // DISABLED: No bandpass filtering (was 1700
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
 
 // Consistency checking for chord detection
-const int minDetections = 2;
+const int minDetections = 3;  // CHANGED: Increased from 2 to 3 detections
 const double consistencyWindow = 0.3;
 
       //"lightweight duplicate-detection state local to this thread"
@@ -260,6 +277,10 @@ const double consistencyWindow = 0.3;
       					// Verify CRC
       					if(!crc.verify(chordValue)){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ CRC failed for 0x%04X", chordValue);
+      						// Play failure sound (19.5 kHz)
+      						std::thread([&playFeedbackSound]() {
+      							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
+      						}).detach();
       						chordCandidates.erase(decodedValue);
       						lastValue = decodedValue;
       						lastTimestamp = now;
@@ -272,6 +293,10 @@ const double consistencyWindow = 0.3;
       					auto decoded = crc.decode1612(chordValue);
       					if(!decoded.has_value()){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ Decode failed for 0x%04X", chordValue);
+      						// Play failure sound (19.5 kHz)
+      						std::thread([&playFeedbackSound]() {
+      							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
+      						}).detach();
       						chordCandidates.erase(decodedValue);
       						lastValue = decodedValue;
       						lastTimestamp = now;
@@ -281,6 +306,12 @@ const double consistencyWindow = 0.3;
       					uint16_t command = decoded.value();
       					validChords++;
       					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
+
+      					// Play success sound (18.5 kHz) before processing command
+      					std::thread([&playFeedbackSound]() {
+      						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
+      					}).detach();
+
       					protocol.processCommand(command);
 
       					lastValue = decodedValue;
