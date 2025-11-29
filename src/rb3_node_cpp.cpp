@@ -113,26 +113,29 @@ class RB3_cpp_publisher : public rclcpp::Node{
     auto lastPerfReport = std::chrono::steady_clock::now();
 
       //map protocol callbacks -> provider actions
-      protocol.setDriveForDurationCallback([provider](const DriveForDurationCommand& cmd){
-        if(!provider) return;
-        double d = cmd.getDurationSeconds();
-        float speed = cmd.getSpeedPercent();
-        //drive forward for duration (speed expected in percent 0..100)
-        provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
+      protocol.setDriveForDurationCallback([this, provider](const DriveForDurationCommand& cmd){
+      	if(!provider) return;
+      	double d = cmd.getDurationSeconds();
+      	float speed = cmd.getSpeedPercent();
+      	RCLCPP_INFO(this->get_logger(), "🚗 DRIVE command: %.1fs at %.0f%% speed", d, speed);
+      	//drive forward for duration (speed expected in percent 0..100)
+      	provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
       });
 
-      protocol.setTurnForDurationCallback([provider](const TurnForDurationCommand& cmd){
-        if(!provider) return;
-        double d = cmd.getDurationSeconds();
-        float turn = cmd.getTurnRatePercent();
-        provider->turnForDuration(static_cast<float>(d), turn);
+      protocol.setTurnForDurationCallback([this, provider](const TurnForDurationCommand& cmd){
+     if(!provider) return;
+     double d = cmd.getDurationSeconds();
+     float turn = cmd.getTurnRatePercent();
+     RCLCPP_INFO(this->get_logger(), "🔄 TURN command: %.1fs at %.0f%% turn rate", d, turn);
+     provider->turnForDuration(static_cast<float>(d), turn);
      });
       
-      protocol.setStopCallback([provider](){
-        if(!provider) return;
-        provider->setVel(0.0f);
-        provider->setRot(0.0f);
-        provider->setState(VelocityProvider::State::IDLE);
+      protocol.setStopCallback([this, provider](){
+      	if(!provider) return;
+      	RCLCPP_INFO(this->get_logger(), "🛑 STOP command received");
+      	provider->setVel(0.0f);
+      	provider->setRot(0.0f);
+      	provider->setState(VelocityProvider::State::IDLE);
       });
 
   // Create decoder for chord analysis
@@ -153,7 +156,7 @@ auto playFeedbackSound = [this](double frequency) {
 	RCLCPP_INFO(this->get_logger(), "🔊 Feedback: %.0f Hz tone", frequency);
 	// Use system beep via speaker-test with timeout (avoids PortAudio conflict)
 	// timeout kills after 0.2s for short beep
-	std::string cmd = "timeout 0.1 speaker-test -t sine -f " + std::to_string((int)frequency) +
+	std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)frequency) +
 	                  " -c 2 >/dev/null 2>&1 &";
 	system(cmd.c_str());
 };
@@ -478,7 +481,7 @@ const double consistencyWindow = 0.3;
 			auto playTone = [this](double freq, const char* name) {
 				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
 				// Use system command to avoid PortAudio conflict, timeout for short beep
-				std::string cmd = "timeout 0.1 speaker-test -t sine -f " + std::to_string((int)freq) +
+				std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)freq) +
 				                  " -c 2 >/dev/null 2>&1 &";
 				int result = system(cmd.c_str());
 				if (result == 0) {

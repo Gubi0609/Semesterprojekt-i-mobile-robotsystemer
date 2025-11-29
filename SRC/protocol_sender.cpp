@@ -46,22 +46,11 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 		feedbackReceived.store(false);
 
-		// Send via audio
-		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
-		AudioComm::ChordTransmitter::Config config;
-		config.toneDuration = duration;
-		if (!transmitter.startTransmitting(encoded[0], config)) {
-			std::cerr << "❌ Failed to start transmission!\n";
-			return;
-		}
-
-		// Start feedback listener AFTER 100ms delay (avoid previous confirmation)
+		// Start feedback listener FIRST (no delay - catch feedback immediately)
 		FrequencyDetector detector;
 		std::atomic<bool> stopListening{false};
 
 		if (waitForFeedback) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
 			FrequencyDetector::Config detConfig;
 			detConfig.sampleRate = 48000;
 			detConfig.fftSize = 4096;
@@ -83,14 +72,24 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 				}
 			};
 
-			std::cout << "🎤 Listening for feedback (3.5 kHz) after 100ms...\n";
+			std::cout << "🎤 Listening for feedback (3.5 kHz)...\n";
 			detector.startAsync(detConfig, callback);
+		}
+
+		// Send via audio AFTER starting listener
+		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
+		AudioComm::ChordTransmitter::Config config;
+		config.toneDuration = duration;
+		if (!transmitter.startTransmitting(encoded[0], config)) {
+			std::cerr << "❌ Failed to start transmission!\n";
+			if (waitForFeedback) detector.stop();
+			return;
 		}
 
 		transmitter.waitForCompletion();
 
 		if (waitForFeedback) {
-			// Wait additional 0.4s for feedback (0.1s tone + 0.3s grace period)
+			// Wait additional 0.4s for feedback (0.15s tone + 0.25s grace period)
 			std::cout << "⏳ Waiting for feedback...\n";
 			auto startWait = std::chrono::steady_clock::now();
 			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.4) {
