@@ -149,21 +149,12 @@ const double FEEDBACK_FAILURE_FREQ = 4500.0;  // Failure/error tone (4.5 kHz)
 const double FEEDBACK_DURATION = 0.5;          // 500ms tone (increased for testing)
 
 // Helper function to play feedback sound - capture all needed variables
-auto playFeedbackSound = [this, feedbackToneGen, FEEDBACK_DURATION](double frequency) {
-	RCLCPP_INFO(this->get_logger(), "🔊 Playing feedback tone: %.0f Hz for %.1fs", frequency, FEEDBACK_DURATION);
-	ToneGenerator::Config feedbackConfig;
-	feedbackConfig.frequencies = {frequency};
-	feedbackConfig.duration = FEEDBACK_DURATION;
-	feedbackConfig.gain = 0.5;  // Increased gain for better audibility
-	feedbackConfig.sampleRate = 48000.0;
-	feedbackConfig.channels = 2;
-	feedbackConfig.fadeTime = 0.01;
-	bool started = feedbackToneGen->start(feedbackConfig);
-	if (started) {
-		RCLCPP_INFO(this->get_logger(), "✅ Tone started successfully");
-	} else {
-		RCLCPP_ERROR(this->get_logger(), "❌ Failed to start tone!");
-	}
+auto playFeedbackSound = [this](double frequency) {
+	RCLCPP_INFO(this->get_logger(), "🔊 Feedback: %.0f Hz tone", frequency);
+	// Use system beep via speaker-test (avoids PortAudio conflict with receiver)
+	std::string cmd = "speaker-test -t sine -f " + std::to_string((int)frequency) +
+	                  " -l 1 -c 2 >/dev/null 2>&1 &";
+	system(cmd.c_str());
 };
 
 // Create low-level frequency detector to track all FFT operations
@@ -483,20 +474,16 @@ const double consistencyWindow = 0.3;
 			const double FAILURE_FREQ = 4500.0;
 			const double DURATION = 0.5;  // 500ms for testing
 
-			auto playTone = [this, toneGen, DURATION](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz for %.1fs", name, freq, DURATION);
-				ToneGenerator::Config config;
-				config.frequencies = {freq};
-				config.duration = DURATION;
-				config.gain = 0.8;  // Higher gain for testing
-				config.sampleRate = 48000.0;
-				config.channels = 2;
-				config.fadeTime = 0.01;
-				bool started = toneGen->start(config);
-				if (started) {
-					RCLCPP_INFO(this->get_logger(), "✅ Tone started successfully");
+			auto playTone = [this](double freq, const char* name) {
+				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				// Use system command to avoid PortAudio conflict
+				std::string cmd = "speaker-test -t sine -f " + std::to_string((int)freq) +
+				                  " -l 1 -c 2 >/dev/null 2>&1 &";
+				int result = system(cmd.c_str());
+				if (result == 0) {
+					RCLCPP_INFO(this->get_logger(), "✅ Tone command sent");
 				} else {
-					RCLCPP_ERROR(this->get_logger(), "❌ Failed to start tone!");
+					RCLCPP_ERROR(this->get_logger(), "❌ Failed to send tone command");
 				}
 			};
 
