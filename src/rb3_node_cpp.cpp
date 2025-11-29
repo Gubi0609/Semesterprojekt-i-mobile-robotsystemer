@@ -146,9 +146,9 @@ auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 // Create tone generator for feedback sounds (18-20 kHz band)
 auto feedbackToneGen = std::make_shared<ToneGenerator>();
 
-// Feedback sound configurations (3-5 kHz band - audible range)
+// Feedback sound configurations (audible range, avoid protocol bands)
 const double FEEDBACK_SUCCESS_FREQ = 3500.0;  // Success confirmation (3.5 kHz)
-const double FEEDBACK_FAILURE_FREQ = 4500.0;  // Failure/error tone (4.5 kHz)
+const double FEEDBACK_FAILURE_FREQ = 4000.0;  // Failure/error tone (4.0 kHz) - below protocol range
 const double FEEDBACK_DURATION = 0.5;          // 500ms tone (increased for testing)
 
 // Helper function to play feedback sound - capture all needed variables
@@ -469,13 +469,13 @@ const double consistencyWindow = 0.3;
 			RCLCPP_INFO(this->get_logger(), "");
 			RCLCPP_INFO(this->get_logger(), "🎹 Keyboard Controls:");
 			RCLCPP_INFO(this->get_logger(), "  Press 's' - Play SUCCESS tone (3.5 kHz)");
-			RCLCPP_INFO(this->get_logger(), "  Press 'f' - Play FAILURE tone (4.5 kHz)");
+			RCLCPP_INFO(this->get_logger(), "  Press 'f' - Play FAILURE tone (4.0 kHz)");
 			RCLCPP_INFO(this->get_logger(), "  Press 'q' - Quit keyboard listener");
 			RCLCPP_INFO(this->get_logger(), "");
 
 			auto toneGen = std::make_shared<ToneGenerator>();
 			const double SUCCESS_FREQ = 3500.0;
-			const double FAILURE_FREQ = 4500.0;
+			const double FAILURE_FREQ = 4000.0;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
