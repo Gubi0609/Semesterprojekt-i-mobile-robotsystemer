@@ -119,10 +119,30 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 	}
 
 	if (!success && waitForFeedback) {
-		std::cout << "⚠️  WARNING: No confirmation after " << maxAttempts << " attempts\n";
+		std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
+		std::cout << "║  ⚠️  TRANSMISSION CONFIRMATION FAILED                  ║\n";
+		std::cout << "╚════════════════════════════════════════════════════════╝\n";
+		std::cout << "No feedback received after " << maxAttempts << " attempts.\n\n";
+		std::cout << "Options:\n";
+		std::cout << "  R. Retry transmission\n";
+		std::cout << "  C. Continue anyway (command may have been received)\n";
+		std::cout << "\nChoice: ";
+
+		std::string choice;
+		std::cin >> choice;
+		std::cin.ignore(10000, '\n');
+
+		if (choice == "R" || choice == "r") {
+			std::cout << "\n🔄 Retrying transmission...\n";
+			// Recursive retry - call itself again
+			sendCommandWithRetry(transmitter, crc, command, description, duration, waitForFeedback, retryOnce);
+			return;
+		} else {
+			std::cout << "⚠️  Continuing without confirmation...\n";
+		}
 	}
 
-	// No delay needed - listener starts 100ms after transmission begins
+	// No delay needed - listener starts before transmission begins
 	// This naturally spaces out commands without explicit delays
 }
 
@@ -147,7 +167,6 @@ int main() {
 	std::cout << "║   🎯 Smart Protocol Sender (State Machine)            ║\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
 	std::cout << "Audio transmitter ready.\n";
-	std::cout << "Using smart feedback detection with retry.\n";
 
 	runStateMachineUI(transmitter, crc);
 

@@ -51,7 +51,7 @@ void printModeSelectMenu() {
 
 void printInModeMenu(RobotState state) {
 	std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║  Current Mode: " << std::left << std::setw(37) << stateToString(state) << "║\n";
+	std::cout << "║  Current Mode: " << std::left << std::setfill(' ') << std::setw(37) << stateToString(state) << std::setfill('0') << "║\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n";
 	std::cout << "\n  C. Send Command (for this mode)\n";
 	std::cout << "  S. Send STOP\n";
@@ -169,36 +169,40 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 					std::cin >> duration;
 					std::cout << "Enter speed percentage (0-100): ";
 					std::cin >> speed;
-					
+					std::cin.ignore(10000, '\n');  // Clear input buffer
+
 					sendCommandWithRetry(transmitter, crc, encodeDriveForDuration(duration, speed),
 					                     "Drive " + std::to_string(duration) + "s at " + std::to_string((int)speed) + "%",
 					                     0.8, true, true);
-					
+
 				} else if (currentState == RobotState::TURN_FOR_DURATION) {
 					float duration, turnRate;
 					std::cout << "Enter duration (seconds): ";
 					std::cin >> duration;
 					std::cout << "Enter turn rate percentage (-100 to 100): ";
 					std::cin >> turnRate;
-					
+					std::cin.ignore(10000, '\n');  // Clear input buffer
+
 					sendCommandWithRetry(transmitter, crc, encodeTurnForDuration(duration, turnRate),
 					                     "Turn " + std::to_string(duration) + "s at " + std::to_string((int)turnRate) + "%",
 					                     0.8, true, true);
-					
+
 				} else if (currentState == RobotState::DRIVE_CONTINUOUS) {
 					float speed;
 					std::cout << "Enter speed percentage (0-100): ";
 					std::cin >> speed;
-					
+					std::cin.ignore(10000, '\n');  // Clear input buffer
+
 					sendCommandWithRetry(transmitter, crc, encodeDriveForward(speed),
 					                     "Drive forward at " + std::to_string((int)speed) + "%",
 					                     0.8, true, true);
-					
+
 				} else if (currentState == RobotState::TURN_CONTINUOUS) {
 					float turnRate;
 					std::cout << "Enter turn rate percentage (-100 to 100): ";
 					std::cin >> turnRate;
-					
+					std::cin.ignore(10000, '\n');  // Clear input buffer
+
 					sendCommandWithRetry(transmitter, crc, encodeTurn(turnRate),
 					                     "Turn at " + std::to_string((int)turnRate) + "%",
 					                     0.8, true, true);
