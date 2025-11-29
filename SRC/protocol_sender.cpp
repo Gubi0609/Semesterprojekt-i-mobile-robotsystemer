@@ -1,11 +1,13 @@
 #include "../INCLUDE/command_protocol.h"
 #include "../LIB/audio_transmitter.h"
+#include "../LIB/frequency_detector.h"
 #include "../INCLUDE/CRC.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 // Helper to print command information
 void printCommandInfo(const std::string& description, uint16_t bits) {
@@ -16,9 +18,13 @@ void printCommandInfo(const std::string& description, uint16_t bits) {
 	std::cout << "└────────────────────────────────────────────────────\n";
 }
 
-// Function to send a command through the audio system
-void sendCommand(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t command,
-				 const std::string& description, double duration = 1.0, bool waitAfter = true) {
+// Global flag for feedback detection
+std::atomic<bool> feedbackReceived{false};
+
+// Function to send a command with feedback detection and retry
+void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t command,
+						  const std::string& description, double duration = 1.0,
+						  bool waitForFeedback = true, bool retryOnce = true) {
 	printCommandInfo(description, command);
 
 	// Encode with CRC
@@ -28,18 +34,101 @@ void sendCommand(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t co
 	std::cout << "Encoded (with CRC): " << encoded[0] << " (0x" << std::hex
 			  << std::setfill('0') << std::setw(4) << encoded[0] << std::dec << ")\n";
 
-	// Send via audio
-	std::cout << "Sending via audio for " << duration << " seconds...\n";
-	AudioComm::ChordTransmitter::Config config;
-	config.toneDuration = duration;
-	if (!transmitter.startTransmitting(encoded[0], config)) {
-		std::cerr << "Failed to start transmission!\n";
-		return;
+	int attempts = 0;
+	const int maxAttempts = retryOnce ? 2 : 1;
+	bool success = false;
+
+	while (attempts < maxAttempts && !success) {
+		attempts++;
+		if (attempts > 1) {
+			std::cout << "\n⟳ Retry attempt " << attempts << "/" << maxAttempts << "...\n";
+		}
+
+		feedbackReceived.store(false);
+
+		// Start feedback listener if enabled
+		FrequencyDetector detector;
+		std::atomic<bool> stopListening{false};
+
+		if (waitForFeedback) {
+			FrequencyDetector::Config detConfig;
+			detConfig.sampleRate = 48000;
+			detConfig.fftSize = 4096;
+			detConfig.numPeaks = 5;
+			detConfig.duration = 0.0;  // Continuous
+			detConfig.updateRate = 20.0;
+
+			auto callback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
+				if (stopListening.load()) return;
+
+				// Look for success tone (3.5 kHz ± 100 Hz)
+				for (const auto& peak : peaks) {
+					if (peak.frequency >= 3400.0 && peak.frequency <= 3600.0 && peak.magnitude > 0.01) {
+						std::cout << "✅ SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
+						feedbackReceived.store(true);
+						stopListening.store(true);
+						return;
+					}
+				}
+			};
+
+			std::cout << "🎤 Listening for feedback (3.5 kHz)...\n";
+			detector.startAsync(detConfig, callback);
+		}
+
+		// Send via audio
+		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
+		AudioComm::ChordTransmitter::Config config;
+		config.toneDuration = duration;
+		if (!transmitter.startTransmitting(encoded[0], config)) {
+			std::cerr << "❌ Failed to start transmission!\n";
+			detector.stop();
+			return;
+		}
+
+		transmitter.waitForCompletion();
+
+		if (waitForFeedback) {
+			// Wait additional 0.7s for feedback (0.2s tone + 0.5s grace period)
+			std::cout << "⏳ Waiting for feedback...\n";
+			auto startWait = std::chrono::steady_clock::now();
+			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.7) {
+				if (feedbackReceived.load()) {
+					success = true;
+					break;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			}
+
+			stopListening.store(true);
+			detector.stop();
+
+			if (!success && attempts < maxAttempts) {
+				std::cout << "⚠️  No feedback received\n";
+			} else if (success) {
+				std::cout << "✅ Command confirmed by robot!\n";
+			}
+		} else {
+			success = true;  // Don't wait for feedback
+		}
+
+		if (!success && attempts < maxAttempts) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		}
 	}
 
+	if (!success && waitForFeedback) {
+		std::cout << "⚠️  WARNING: No confirmation after " << maxAttempts << " attempts\n";
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
+
+// Legacy function for compatibility
+void sendCommand(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t command,
+				 const std::string& description, double duration = 1.0, bool waitAfter = true) {
+	sendCommandWithRetry(transmitter, crc, command, description, duration, false, false);
 	if (waitAfter) {
-		std::cout << "Waiting for transmission to complete...\n";
-		transmitter.waitForCompletion();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 }
@@ -58,6 +147,7 @@ void printMenu() {
 	std::cout << "  4. Turn (continuous, high resolution)\n";
 	std::cout << "  5. Stop\n";
 	std::cout << "  6. Send Preset Sequence (demo)\n";
+	std::cout << "  7. 🎯 Smart Drive (with feedback & retry)\n";
 	std::cout << "\n  0. Exit\n";
 	std::cout << "\nEnter choice: ";
 }
@@ -277,6 +367,28 @@ int main() {
 				sendCommand(transmitter, crc, encodeTurnForDuration(1.0f, 50.0f), "Turn 1s right", 0.8, true);
 
 				std::cout << "\nSequence complete!\n";
+				break;
+			}
+
+			case 7: {
+				std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
+				std::cout << "║   🎯 Smart Drive (with Feedback Detection & Retry)    ║\n";
+				std::cout << "╚════════════════════════════════════════════════════════╝\n";
+				std::cout << "This mode listens for 3.5 kHz confirmation tone\n";
+				std::cout << "and retries once if no feedback is received.\n\n";
+
+				float duration, speed;
+				std::cout << "Enter drive duration (seconds): ";
+				std::cin >> duration;
+				std::cout << "Enter speed percentage (0-100): ";
+				std::cin >> speed;
+
+				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
+				sendCommandWithRetry(transmitter, crc, encodeModeSelect(RobotMode::DRIVE_FOR_DURATION),
+				                     "Mode: DRIVE_FOR_DURATION", 0.8, true, true);
+				sendCommandWithRetry(transmitter, crc, encodeDriveForDuration(duration, speed),
+				                     "Drive command", 0.8, true, true);
 				break;
 			}
 
