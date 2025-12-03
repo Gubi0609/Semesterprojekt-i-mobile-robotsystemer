@@ -486,7 +486,7 @@ const double consistencyWindow = 0.3;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz", name, freq);
 				// Use system command to avoid PortAudio conflict, timeout for short beep
 				std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)freq) +
 				                  " -c 2 >/dev/null 2>&1 &";

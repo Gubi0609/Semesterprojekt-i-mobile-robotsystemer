@@ -108,10 +108,10 @@ void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
 	updateDurationValues = true;
 }
 
-void VelocityProvider::driveContinuous(float lin, float rot){
+void VelocityProvider::driveContinuous(float lin){
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::CONTINUOUS;
-	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin, rot);
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin,0.0f);
 	setVel(adjustedLin);
 	setRot(adjustedRot);
 }
