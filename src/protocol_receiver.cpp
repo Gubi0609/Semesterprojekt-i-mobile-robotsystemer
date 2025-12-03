@@ -284,7 +284,7 @@ int main(int argc, char* argv[]) {
 			bool isValid = crc.verify(det.value);
 
 			if (!isValid) {
-				std::cout << "✗ CRC CHECK FAILED!\n";
+				std::cout << "CRC CHECK FAILED!\n";
 				std::cout << "  → Transmission error detected\n";
 				std::cout << "  → Command REJECTED for safety\n";
 				std::cout << "\n" << std::string(60, '=') << "\n";
@@ -292,14 +292,14 @@ int main(int argc, char* argv[]) {
 				return;
 			}
 
-			std::cout << "✓ CRC CHECK PASSED\n";
+			std::cout << "CRC CHECK PASSED\n";
 
 			// Step 2: Decode to get original 12-bit command
 			std::cout << "\n[STEP 2: DECODE COMMAND]\n";
 			optional<uint16_t> decodedData = crc.decode1612(det.value);
 
 			if (!decodedData.has_value()) {
-				std::cout << "✗ DECODE FAILED!\n";
+				std::cout << "DECODE FAILED!\n";
 				std::cout << "\n" << std::string(60, '=') << "\n";
 				std::cout << "Listening for next command...\n\n";
 				return;
@@ -343,7 +343,7 @@ int main(int argc, char* argv[]) {
 
 		if (timeSinceActivity >= RESTART_INTERVAL && !needsRestart) {
 			needsRestart = true;
-			std::cout << "\n⟳ Idle for " << RESTART_INTERVAL << "s - Restarting microphone...\n";
+			std::cout << "\n Idle for " << RESTART_INTERVAL << "s - Restarting microphone...\n";
 
 			// Stop receiver
 			receiver.stop();
@@ -353,10 +353,10 @@ int main(int argc, char* argv[]) {
 			receiverStarted = receiver.startReceiving(recvConfig, detectionCallback);
 
 			if (receiverStarted) {
-				std::cout << "✓ Microphone restarted successfully\n";
+				std::cout << "Microphone restarted successfully\n";
 				std::cout << "Listening for commands...\n\n";
 			} else {
-				std::cerr << "✗ ERROR: Failed to restart microphone!\n";
+				std::cerr << "ERROR: Failed to restart microphone!\n";
 			}
 
 			// Reset activity timer and restart flag
