@@ -65,7 +65,7 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 				// Look for success tone (3.5 kHz ± 100 Hz)
 				for (const auto& peak : peaks) {
 					if (peak.frequency >= 3400.0 && peak.frequency <= 3600.0 && peak.magnitude > 0.01) {
-						std::cout << "✅ SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
+						std::cout << "SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
 						feedbackReceived.store(true);
 						stopListening.store(true);
 						return;
@@ -73,16 +73,16 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 				}
 			};
 
-			std::cout << "🎤 Listening for feedback (3.5 kHz)...\n";
+			std::cout << "Listening for feedback (3.5 kHz)...\n";
 			detector.startAsync(detConfig, callback);
 		}
 
 		// Send via audio AFTER starting listener
-		std::cout << "📡 Sending via audio for " << duration << " seconds...\n";
+		std::cout << "Sending via audio for " << duration << " seconds...\n";
 		AudioComm::ChordTransmitter::Config config;
 		config.toneDuration = duration;
 		if (!transmitter.startTransmitting(encoded[0], config)) {
-			std::cerr << "❌ Failed to start transmission!\n";
+			std::cerr << "Failed to start transmission!\n";
 			if (waitForFeedback) detector.stop();
 			return;
 		}
@@ -91,7 +91,7 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 		if (waitForFeedback) {
 			// Wait additional 0.4s for feedback (0.15s tone + 0.25s grace period)
-			std::cout << "⏳ Waiting for feedback...\n";
+			std::cout << "Waiting for feedback...\n";
 			auto startWait = std::chrono::steady_clock::now();
 			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.4) {
 				if (feedbackReceived.load()) {
@@ -105,9 +105,9 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 			detector.stop();
 
 			if (!success && attempts < maxAttempts) {
-				std::cout << "⚠️  No feedback received\n";
+				std::cout << "No feedback received\n";
 			} else if (success) {
-				std::cout << "✅ Command confirmed by robot!\n";
+				std::cout << "Command confirmed by robot!\n";
 			}
 		} else {
 			success = true;  // Don't wait for feedback
@@ -120,7 +120,7 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 	if (!success && waitForFeedback) {
 		std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-		std::cout << "║  ⚠️  TRANSMISSION CONFIRMATION FAILED                  ║\n";
+		std::cout << "║  TRANSMISSION CONFIRMATION FAILED                  																			  ║\n";
 		std::cout << "╚════════════════════════════════════════════════════════╝\n";
 		std::cout << "No feedback received after " << maxAttempts << " attempts.\n\n";
 		std::cout << "Options:\n";
@@ -133,12 +133,12 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 		std::cin.ignore(10000, '\n');
 
 		if (choice == "R" || choice == "r") {
-			std::cout << "\n🔄 Retrying transmission...\n";
+			std::cout << "\n Retrying transmission...\n";
 			// Recursive retry - call itself again
 			sendCommandWithRetry(transmitter, crc, command, description, duration, waitForFeedback, retryOnce);
 			return;
 		} else {
-			std::cout << "⚠️  Continuing without confirmation...\n";
+			std::cout << "Continuing without confirmation...\n";
 		}
 	}
 
@@ -164,12 +164,12 @@ int main() {
 	CRC crc;
 
 	std::cout << "╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║   🎯 Smart Protocol Sender (State Machine)            ║\n";
+	std::cout << "║  Command Sender starting...																											            ║\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
 	std::cout << "Audio transmitter ready.\n";
 
 	runStateMachineUI(transmitter, crc);
 
-	std::cout << "\n🔌 Shutting down...\n";
+	std::cout << "\n Shutting down...\n";
 	return 0;
 }

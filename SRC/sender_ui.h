@@ -37,7 +37,7 @@ std::string stateToString(RobotState state) {
 
 void printModeSelectMenu() {
 	std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║              📡 SELECT ROBOT MODE                      ║\n";
+	std::cout << "║               SELECT ROBOT MODE    																						       	                  ║\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n";
 	std::cout << "\n  1. Drive for Duration\n";
 	std::cout << "  2. Turn for Duration\n";
@@ -45,7 +45,7 @@ void printModeSelectMenu() {
 	std::cout << "  4. Turn (continuous)\n";
 	std::cout << "  5. Stop Mode\n";
 	std::cout << "\n  0. Exit Program\n";
-	std::cout << "\n🎯 All modes use smart feedback with retry\n";
+	std::cout << "\n All modes use smart feedback with retry\n";
 	std::cout << "\nSelect mode: ";
 }
 
@@ -78,7 +78,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 			}
 
 			if (choice == "0") {
-				std::cout << "\n👋 Exiting...\n";
+				std::cout << "\n Exiting...\n";
 				break;
 			}
 
@@ -111,14 +111,14 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 
 			// Send RESET + MODE SELECT with feedback
 			std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-			std::cout << "📡 Entering mode: " << stateToString(nextState) << "\n";
+			std::cout << " Entering mode: " << stateToString(nextState) << "\n";
 			std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 			
 			sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
 			sendCommandWithRetry(transmitter, crc, encodeModeSelect(selectedMode), 
 			                     "Mode: " + stateToString(nextState), 0.8, true, true);
 			
-			std::cout << "\n✅ Robot is now in " << stateToString(nextState) << " mode\n";
+			std::cout << "\n Robot is now in " << stateToString(nextState) << " mode\n";
 			currentState = nextState;
 
 		} else {
@@ -134,28 +134,28 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 			}
 
 			if (choice == "0") {
-				std::cout << "\n👋 Exiting...\n";
+				std::cout << "\n Exiting...\n";
 				break;
 			}
 
 			// Handle RESET - return to mode select
 			if (choice == "R" || choice == "r") {
 				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-				std::cout << "📡 Sending RESET (returning to mode select)\n";
+				std::cout << " Sending RESET (returning to mode select)\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
 				currentState = RobotState::NO_MODE;
-				std::cout << "\n✅ Back to mode select\n";
+				std::cout << "\n Back to mode select\n";
 				continue;
 			}
 
 			// Handle STOP
 			if (choice == "S" || choice == "s") {
 				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-				std::cout << "🛑 Sending STOP\n";
+				std::cout << " Sending STOP\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				sendCommandWithRetry(transmitter, crc, encodeStop(), "STOP", 0.8, true, true);
-				std::cout << "\n✅ STOP sent (still in " << stateToString(currentState) << " mode)\n";
+				std::cout << "\n STOP sent (still in " << stateToString(currentState) << " mode)\n";
 				continue;
 			}
 
@@ -208,14 +208,14 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 					                     0.8, true, true);
 					
 				} else if (currentState == RobotState::STOP_MODE) {
-					std::cout << "ℹ️  Already in STOP mode. Use 'R' to return to mode select.\n";
+					std::cout << "Already in STOP mode. Use 'R' to return to mode select.\n";
 				}
 				
-				std::cout << "\n✅ Command sent\n";
+				std::cout << "\n Command sent\n";
 				continue;
 			}
 
-			std::cout << "❌ Invalid choice.\n";
+			std::cout << "Invalid choice.\n";
 		}
 	}
 }

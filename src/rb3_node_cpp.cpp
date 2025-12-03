@@ -117,7 +117,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	if(!provider) return;
       	double d = cmd.getDurationSeconds();
       	float speed = cmd.getSpeedPercent();
-      	RCLCPP_INFO(this->get_logger(), "🚗 DRIVE command: %.1fs at %.0f%% speed", d, speed);
+      	RCLCPP_INFO(this->get_logger(), "DRIVE command: %.1fs at %.0f%% speed", d, speed);
       	//drive forward for duration (speed expected in percent 0..100)
       	provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
       });
@@ -126,13 +126,13 @@ class RB3_cpp_publisher : public rclcpp::Node{
      if(!provider) return;
      double d = cmd.getDurationSeconds();
      float turn = cmd.getTurnRatePercent();
-     RCLCPP_INFO(this->get_logger(), "🔄 TURN command: %.1fs at %.0f%% turn rate", d, turn);
+     RCLCPP_INFO(this->get_logger(), "TURN command: %.1fs at %.0f%% turn rate", d, turn);
      provider->turnForDuration(static_cast<float>(d), turn);
      });
       
       protocol.setStopCallback([this, provider](){
       	if(!provider) return;
-      	RCLCPP_INFO(this->get_logger(), "🛑 STOP command received");
+      	RCLCPP_INFO(this->get_logger(), "STOP command received");
       	provider->setVel(0.0f);
       	provider->setRot(0.0f);
       	provider->setState(VelocityProvider::State::IDLE);
@@ -153,7 +153,7 @@ const double FEEDBACK_DURATION = 0.5;          // 500ms tone (increased for test
 
 // Helper function to play feedback sound - capture all needed variables
 auto playFeedbackSound = [this](double frequency) {
-	RCLCPP_INFO(this->get_logger(), "🔊 Feedback: %.0f Hz tone", frequency);
+	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz tone", frequency);
 	// Use system beep via speaker-test with timeout (avoids PortAudio conflict)
 	// timeout kills after 0.2s for short beep
 	std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)frequency) +
@@ -283,11 +283,11 @@ const double consistencyWindow = 0.3;
       					lastActivityTime = now;
 
       					uint16_t chordValue = static_cast<uint16_t>(decodedValue);
-      					RCLCPP_INFO(this->get_logger(), "🎵 CHORD DETECTED! Value: 0x%04X", chordValue);
+      					RCLCPP_INFO(this->get_logger(), "CHORD DETECTED! Value: 0x%04X", chordValue);
 
       					// Verify CRC
       					if(!crc.verify(chordValue)){
-      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ CRC failed for 0x%04X", chordValue);
+      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "CRC failed for 0x%04X", chordValue);
       						// Play failure sound (19.5 kHz)
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
@@ -298,12 +298,12 @@ const double consistencyWindow = 0.3;
       						return;
       					}
 
-      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "✅ CRC PASSED for 0x%04X", chordValue);
+      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "CRC PASSED for 0x%04X", chordValue);
 
       					// Decode command
       					auto decoded = crc.decode1612(chordValue);
       					if(!decoded.has_value()){
-      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "❌ Decode failed for 0x%04X", chordValue);
+      						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "Decode failed for 0x%04X", chordValue);
       						// Play failure sound (19.5 kHz)
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
@@ -316,7 +316,7 @@ const double consistencyWindow = 0.3;
 
       					uint16_t command = decoded.value();
       					validChords++;
-      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "🔓 DECODED command: 0x%03X", command);
+      					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "DECODED command: 0x%03X", command);
 
       					// Play success sound (18.5 kHz) before processing command
       					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
@@ -340,8 +340,8 @@ const double consistencyWindow = 0.3;
       	receiver_running_.store(false);
       	return;
       } else {
-      	RCLCPP_INFO(this->get_logger(), "✅ Frequency detector started successfully!");
-      	RCLCPP_INFO(this->get_logger(), "🎤 Listening for audio commands...");
+      	RCLCPP_INFO(this->get_logger(), "Frequency detector started successfully!");
+      	RCLCPP_INFO(this->get_logger(), "Listening for audio commands...");
       }
 
   		//run until asked to stop with periodic microphone restart and performance reporting
@@ -361,30 +361,30 @@ const double consistencyWindow = 0.3;
   					(double)peaksDetected.load() / totalFFTs.load() : 0.0;
 
   				RCLCPP_INFO(this->get_logger(), "");
-  				RCLCPP_INFO(this->get_logger(), "📊 ===== PERFORMANCE REPORT =====");
-  				RCLCPP_INFO(this->get_logger(), "📊 Runtime: %.1f seconds", totalRuntime);
-  				RCLCPP_INFO(this->get_logger(), "📊 FFT Processing:");
-  				RCLCPP_INFO(this->get_logger(), "📊   Total FFTs: %d", totalFFTs.load());
-  				RCLCPP_INFO(this->get_logger(), "📊   FFT Rate: %.2f Hz", fftRate);
-  				RCLCPP_INFO(this->get_logger(), "📊   Total Peaks: %d", peaksDetected.load());
-  				RCLCPP_INFO(this->get_logger(), "📊   Valid Freqs: %d", validFreqs.load());
-  				RCLCPP_INFO(this->get_logger(), "📊   Avg Peaks/FFT: %.2f", avgPeaksPerFFT);
-  				RCLCPP_INFO(this->get_logger(), "📊 Chord Detection:");
-  				RCLCPP_INFO(this->get_logger(), "📊   Chord Detections: %d", totalDetections.load());
-  				RCLCPP_INFO(this->get_logger(), "📊   Detection Rate: %.2f Hz", detectionRate);
-  				RCLCPP_INFO(this->get_logger(), "📊   Valid Commands: %d", validChords.load());
-  				RCLCPP_INFO(this->get_logger(), "📊   Valid Rate: %.2f Hz", validRate);
+  				RCLCPP_INFO(this->get_logger(), "===== PERFORMANCE REPORT =====");
+  				RCLCPP_INFO(this->get_logger(), "Runtime: %.1f seconds", totalRuntime);
+  				RCLCPP_INFO(this->get_logger(), "FFT Processing:");
+  				RCLCPP_INFO(this->get_logger(), "  Total FFTs: %d", totalFFTs.load());
+  				RCLCPP_INFO(this->get_logger(), "  FFT Rate: %.2f Hz", fftRate);
+  				RCLCPP_INFO(this->get_logger(), "  Total Peaks: %d", peaksDetected.load());
+  				RCLCPP_INFO(this->get_logger(), "  Valid Freqs: %d", validFreqs.load());
+  				RCLCPP_INFO(this->get_logger(), "  Avg Peaks/FFT: %.2f", avgPeaksPerFFT);
+  				RCLCPP_INFO(this->get_logger(), "Chord Detection:");
+  				RCLCPP_INFO(this->get_logger(), "  Chord Detections: %d", totalDetections.load());
+  				RCLCPP_INFO(this->get_logger(), "  Detection Rate: %.2f Hz", detectionRate);
+  				RCLCPP_INFO(this->get_logger(), "  Valid Commands: %d", validChords.load());
+  				RCLCPP_INFO(this->get_logger(), "  Valid Rate: %.2f Hz", validRate);
 
   				if (fftRate < 5.0) {
-  					RCLCPP_WARN(this->get_logger(), "⚠️  FFT rate is very low (< 5 Hz) - CPU too slow or FFT too large");
+  					RCLCPP_WARN(this->get_logger(), " FFT rate is very low (< 5 Hz) - CPU too slow or FFT too large");
   				} else if (fftRate < 15.0) {
-  					RCLCPP_WARN(this->get_logger(), "⚠️  FFT rate is below target (< 15 Hz) - may cause delays");
+  					RCLCPP_WARN(this->get_logger(), " FFT rate is below target (< 15 Hz) - may cause delays");
   				} else if (fftRate >= 18.0) {
-  					RCLCPP_INFO(this->get_logger(), "✅ FFT rate is excellent (>= 18 Hz)");
+  					RCLCPP_INFO(this->get_logger(), " FFT rate is excellent (>= 18 Hz)");
   				} else {
-  					RCLCPP_INFO(this->get_logger(), "✓ FFT rate is good (15-18 Hz)");
+  					RCLCPP_INFO(this->get_logger(), " FFT rate is good (15-18 Hz)");
   				}
-  				RCLCPP_INFO(this->get_logger(), "📊 ==============================");
+  				RCLCPP_INFO(this->get_logger(), " ==============================");
   				RCLCPP_INFO(this->get_logger(), "");
 
   				lastPerfReport = now;
@@ -432,19 +432,19 @@ const double consistencyWindow = 0.3;
   		double avgValidRate = validChords.load() / totalRuntime;
 
   		RCLCPP_INFO(this->get_logger(), "");
-  		RCLCPP_INFO(this->get_logger(), "📊 ===== FINAL PERFORMANCE REPORT =====");
-  		RCLCPP_INFO(this->get_logger(), "📊 Total Runtime: %.1f seconds", totalRuntime);
-  		RCLCPP_INFO(this->get_logger(), "📊 FFT Statistics:");
-  		RCLCPP_INFO(this->get_logger(), "📊   Total FFTs: %d", totalFFTs.load());
-  		RCLCPP_INFO(this->get_logger(), "📊   Average FFT Rate: %.2f Hz", avgFFTRate);
-  		RCLCPP_INFO(this->get_logger(), "📊   Total Peaks: %d", peaksDetected.load());
-  		RCLCPP_INFO(this->get_logger(), "📊   Valid Frequencies: %d", validFreqs.load());
-  		RCLCPP_INFO(this->get_logger(), "📊 Chord Detection:");
-  		RCLCPP_INFO(this->get_logger(), "📊   Total Chord Detections: %d", totalDetections.load());
-  		RCLCPP_INFO(this->get_logger(), "📊   Average Detection Rate: %.2f Hz", avgDetectionRate);
-  		RCLCPP_INFO(this->get_logger(), "📊   Total Valid Commands: %d", validChords.load());
-  		RCLCPP_INFO(this->get_logger(), "📊   Average Valid Command Rate: %.2f Hz", avgValidRate);
-  		RCLCPP_INFO(this->get_logger(), "📊 ======================================");
+  		RCLCPP_INFO(this->get_logger(), "===== FINAL PERFORMANCE REPORT =====");
+  		RCLCPP_INFO(this->get_logger(), "Total Runtime: %.1f seconds", totalRuntime);
+  		RCLCPP_INFO(this->get_logger(), "FFT Statistics:");
+  		RCLCPP_INFO(this->get_logger(), "  Total FFTs: %d", totalFFTs.load());
+  		RCLCPP_INFO(this->get_logger(), "  Average FFT Rate: %.2f Hz", avgFFTRate);
+  		RCLCPP_INFO(this->get_logger(), "  Total Peaks: %d", peaksDetected.load());
+  		RCLCPP_INFO(this->get_logger(), "  Valid Frequencies: %d", validFreqs.load());
+  		RCLCPP_INFO(this->get_logger(), "Chord Detection:");
+  		RCLCPP_INFO(this->get_logger(), "  Total Chord Detections: %d", totalDetections.load());
+  		RCLCPP_INFO(this->get_logger(), "  Average Detection Rate: %.2f Hz", avgDetectionRate);
+  		RCLCPP_INFO(this->get_logger(), "  Total Valid Commands: %d", validChords.load());
+  		RCLCPP_INFO(this->get_logger(), "  Average Valid Command Rate: %.2f Hz", avgValidRate);
+  		RCLCPP_INFO(this->get_logger(), "======================================");
   		RCLCPP_INFO(this->get_logger(), "");
   		RCLCPP_INFO(this->get_logger(), "Audio receiver thread stopped");
 
@@ -467,7 +467,7 @@ const double consistencyWindow = 0.3;
 			fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
 			RCLCPP_INFO(this->get_logger(), "");
-			RCLCPP_INFO(this->get_logger(), "🎹 Keyboard Controls:");
+			RCLCPP_INFO(this->get_logger(), "Keyboard Controls:");
 			RCLCPP_INFO(this->get_logger(), "  Press 's' - Play SUCCESS tone (3.5 kHz)");
 			RCLCPP_INFO(this->get_logger(), "  Press 'f' - Play FAILURE tone (4.0 kHz)");
 			RCLCPP_INFO(this->get_logger(), "  Press 'q' - Quit keyboard listener");
@@ -485,9 +485,9 @@ const double consistencyWindow = 0.3;
 				                  " -c 2 >/dev/null 2>&1 &";
 				int result = system(cmd.c_str());
 				if (result == 0) {
-					RCLCPP_INFO(this->get_logger(), "✅ Tone command sent");
+					RCLCPP_INFO(this->get_logger(), "Tone command sent");
 				} else {
-					RCLCPP_ERROR(this->get_logger(), "❌ Failed to send tone command");
+					RCLCPP_ERROR(this->get_logger(), "Failed to send tone command");
 				}
 			};
 
@@ -498,7 +498,7 @@ const double consistencyWindow = 0.3;
 				} else if (c == 'f' || c == 'F') {
 					playTone(FAILURE_FREQ, "FAILURE");
 				} else if (c == 'q' || c == 'Q') {
-					RCLCPP_INFO(this->get_logger(), "🎹 Keyboard listener stopped");
+					RCLCPP_INFO(this->get_logger(), "Keyboard listener stopped");
 					keyboard_running_.store(false);
 					break;
 				}
