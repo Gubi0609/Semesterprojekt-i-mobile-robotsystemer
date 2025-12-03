@@ -94,7 +94,7 @@ struct DriveForwardCommand {
 struct TurnCommand {
 	uint16_t turnRateRaw;  // 0-4095 (12 bits)
 
-	// Convert to actual value
+	// Convert to actual valuegetCurrentMode
 	float getTurnRatePercent() const { return ((turnRateRaw / 2047.5f) - 1.0f) * 100.0f; }  // Maps 0-4095 to -100 to +100
 
 	// Create from actual value

@@ -43,6 +43,7 @@ public:
     void turnForDuration(float s, float rotational);
     void driveForDuration(float s, float linear, float rotational);
     void driveContinuous(float linear);
+    void turnContinuous(float rotational);
 
     std::tuple<float, float> adjustLinAndRot(float linear, float rotational);
 

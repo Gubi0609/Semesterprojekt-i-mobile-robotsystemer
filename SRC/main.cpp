@@ -1,7 +1,7 @@
 #include "../LIB/audio_transmitter.h"
 #include "../INCLUDE/CRC.h"
-#include "../DATABASE/Database.h"
-#include "../DATABASE/Logger.h"
+#include "../INCLUDE/Database.h"
+#include "../INCLUDE/Logger.h"
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>

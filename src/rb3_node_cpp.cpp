@@ -138,12 +138,19 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	provider->setState(VelocityProvider::State::IDLE);
       });
 
-	  protocol.setDriveForwardCallback([this, provider](const DriveForwardCommand& cmd){
-      	if(!provider) return;
-      	float speed = cmd.getSpeedPercent();
-      	RCLCPP_INFO(this->get_logger(), "DRIVE CONTINUOUS command: %.0f%% speed", speed);
-      	provider->driveContinuous(speed);
-      });
+    protocol.setDriveForwardCallback([this, provider](const DriveForwardCommand& cmd){
+  			if(!provider) return;
+  			float speed = cmd.getSpeedPercent();
+  			RCLCPP_INFO(this->get_logger(), "DRIVE CONTINUOUS command: %.0f%% speed", speed);
+  			provider->driveContinuous(speed);
+  		});
+
+  		protocol.setTurnCallback([this, provider](const TurnCommand& cmd){
+  			if(!provider) return;
+  			float turn = cmd.getTurnRatePercent();
+  			RCLCPP_INFO(this->get_logger(), "TURN CONTINUOUS command: %.0f%% turn rate", turn);
+  			provider->turnContinuous(turn);
+  		});
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;

@@ -116,6 +116,14 @@ void VelocityProvider::driveContinuous(float lin){
 	setRot(adjustedRot);
 }
 
+void VelocityProvider::turnContinuous(float rot){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
+	state_ = State::CONTINUOUS;
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(0.0f, rot);
+	setVel(adjustedLin);
+	setRot(adjustedRot);
+}
+
 std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
 	if(lin+std::fabs(rot)<100.0f){
 		return {lin,rot};
