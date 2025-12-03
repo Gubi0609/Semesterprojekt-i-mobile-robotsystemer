@@ -20,7 +20,7 @@ float VelocityProvider::getRot(){
 
 void VelocityProvider::setVel(float f){
 	//std::lock_guard<std::mutex> lk(mu_);
-	// Expect input f in range [-100 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
+	// Expect input f in range [0 .. 100]. Map to physical range [0 .. PHYS_MAX_LINEAR].
 	if(f > INPUT_MAX_LINEAR) f = INPUT_MAX_LINEAR;
 	if(f < INPUT_MIN_LINEAR) f = INPUT_MIN_LINEAR;
 
