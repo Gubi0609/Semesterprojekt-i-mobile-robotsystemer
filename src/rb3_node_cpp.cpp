@@ -119,7 +119,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	float speed = cmd.getSpeedPercent();
       	RCLCPP_INFO(this->get_logger(), "DRIVE command: %.1fs at %.0f%% speed", d, speed);
       	//drive forward for duration (speed expected in percent 0..100)
-      	provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
+      	provider->forwardForDuration(static_cast<float>(d), speed);
       });
 
       protocol.setTurnForDurationCallback([this, provider](const TurnForDurationCommand& cmd){
@@ -136,6 +136,13 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	provider->setVel(0.0f);
       	provider->setRot(0.0f);
       	provider->setState(VelocityProvider::State::IDLE);
+      });
+
+	  protocol.setDriveForwardCallback([this, provider](const DriveForwardCommand& cmd){
+      	if(!provider) return;
+      	float speed = cmd.getSpeedPercent();
+      	RCLCPP_INFO(this->get_logger(), "DRIVE CONTINUOUS command: %.0f%% speed", speed);
+      	provider->driveContinuous(speed);
       });
 
   // Create decoder for chord analysis

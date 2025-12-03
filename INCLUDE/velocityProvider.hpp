@@ -11,7 +11,6 @@
 
 //to use fabs(float abs)
 #include <cmath>
-//#include eliasclass.cpp
 
 
 class VelocityProvider {
@@ -25,7 +24,7 @@ public:
     void setRot(float f);
     void checkDurationExpiry(); 
 
-    enum class State {IDLE, DURATION};
+    enum class State {IDLE, DURATION, CONTINUOUS};
     State state() const {return state_;}
 
     void update(); //update state
@@ -73,6 +72,7 @@ private:
     //dont know if these are usable /relevant
     //bool timeStampSet = false;  
     bool enableDriving = false;
+    bool updateDurationValues = false;
 
     //State data
     State state_ = State::IDLE;
