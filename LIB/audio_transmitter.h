@@ -69,14 +69,14 @@ private:
 class ChordTransmitter {
 public:
 	struct Config {
-		double tone1MinFreq = 5000.0;
-		double tone1MaxFreq = 8000.0;
-		double tone2MinFreq = 8500.0;
-		double tone2MaxFreq = 11500.0;
-		double tone3MinFreq = 12000.0;
-		double tone3MaxFreq = 15000.0;
-		double tone4MinFreq = 15500.0;
-		double tone4MaxFreq = 18500.0;
+		double tone1MinFreq = 4500.0;
+		double tone1MaxFreq = 7000.0;
+		double tone2MinFreq = 7500.0;
+		double tone2MaxFreq = 10000.0;
+		double tone3MinFreq = 10500.0;
+		double tone3MaxFreq = 13000.0;
+		double tone4MinFreq = 13500.0;  // Under 18 kHz mic limit
+		double tone4MaxFreq = 16000.0;
 		int bitsPerTone = 4;
 		double toneDuration = 0.0;    // 0 = infinite
 		double fadeTime = 0.05;
