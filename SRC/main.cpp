@@ -1,14 +1,14 @@
 #include "../LIB/audio_transmitter.h"
 #include "../INCLUDE/CRC.h"
-#include "../DATABASE/Database.h"
-#include "../DATABASE/Logger.h"
+#include "../INCLUDE/Database.h"
+#include "../INCLUDE/Logger.h"
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
 #include <vector>
+#include <string>
 
 // CRC-encoded chord transmitter
-// Takes a 12-bit value from command line and transmits it with CRC encoding
 int main(int argc, char* argv[]) {
     
     // Command line argument check
@@ -37,15 +37,13 @@ int main(int argc, char* argv[]) {
               << " (0x" << std::hex << std::uppercase << std::setw(3)
               << std::setfill('0') << originalData << std::dec << ")\n";
 
-    
     // Initialize CRC encoder
-    
     CRC crc;
 
-	// Encode the data using CRC (12 bits -> 16 bits)
-	vector<uint16_t> dataVector = {static_cast<uint16_t>(originalData & 0x0FFF)};
-	vector<uint16_t> encodedVector = crc.encode1216(dataVector);
-	uint16_t encodedData = encodedVector[0];
+    // Encode the data using CRC (12 bits -> 16 bits)
+    std::vector<uint16_t> dataVector = {static_cast<uint16_t>(originalData & 0x0FFF)};
+    std::vector<uint16_t> encodedVector = crc.encode1216(dataVector);
+    uint16_t encodedData = encodedVector[0];
 
     std::cout << "CRC encoded (16-bit): " << encodedData
               << " (0x" << std::hex << std::uppercase << std::setw(4)
@@ -56,7 +54,6 @@ int main(int argc, char* argv[]) {
     std::cout << "CRC checksum (4-bit): " << crcBits
               << " (0x" << std::hex << std::uppercase << crcBits << std::dec << ")\n\n";
 
-    
     // Initialize database
     Database db("tracking.db");
     if (!db.open()) {
@@ -65,15 +62,37 @@ int main(int argc, char* argv[]) {
     }
     db.createTables();
 
-    
-    // Log the PC transmission    
+    // Prepare structured movement and frequencies strings
+    std::string mode = "auto";      // example mode
+    double speed = 0.0;             // example speed
+    std::string turnDir = "none";   // example turn
+    double duration = 2.0;          // matches transmitter tone duration
+
+    std::string movement = "mode:" + mode +
+                           ";speed:" + std::to_string(speed) +
+                           ";turn:" + turnDir +
+                           ";duration:" + std::to_string(duration);
+
+    // Example frequencies (you can compute them dynamically if needed)
+    double tone1 = 440.0;
+    double tone2 = 880.0;
+    double tone3 = 660.0;
+    double tone4 = 550.0;
+
+    std::string frequencies = "tone1:" + std::to_string(tone1) +
+                              ";tone2:" + std::to_string(tone2) +
+                              ";tone3:" + std::to_string(tone3) +
+                              ";tone4:" + std::to_string(tone4);
+
     std::string command = "TRANSMIT_CHORD";
     std::string bits_raw = std::to_string(originalData);
     std::string bits_encoded = std::to_string(encodedData);
-    double speed = 0.0; // placeholder, no speed in this context
-    double duration = 2.0; // matches the transmitter tone duration
+    std::string commandEncoded = bits_encoded;        // for simplicity
+    std::string intConfirmationRec = "N/A";          // placeholder
 
-    logPCData(db, command, bits_raw, bits_encoded, speed, duration);
+    // Log the PC transmission
+    logPCData(db, "2025-12-03 10:00:00", command, movement,
+              bits_raw, commandEncoded, frequencies, intConfirmationRec);
 
     // Create and configure transmitter
     AudioComm::ChordTransmitter transmitter;
