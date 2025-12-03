@@ -10,9 +10,6 @@ Test result files should follow this format:
 - `<test_name>_<timestamp>.txt` for text output
 - `<test_name>_<date>_<description>.md` for analysis/notes
 
-## Current Results
-- `frequency_test_results_1764156937.csv` - Frequency detection test results
-
 ## Notes
 - Keep test results organized and documented
 - Add a brief description when committing new results

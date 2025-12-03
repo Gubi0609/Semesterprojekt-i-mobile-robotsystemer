@@ -19,21 +19,37 @@ Velocity management module for robot motion control.
 These programs are designed to be compiled on the Raspberry Pi itself or cross-compiled for ARM architecture.
 
 ### Requirements
-- ROS (for rb3_node_cpp.cpp)
+- ROS2 (for rb3_node_cpp.cpp)
 - PortAudio library
 - FFTW3 library
 - Standard C++17 compiler
 
 ### Example Build Commands
+
+Protocol receiver
 ```bash
-# Protocol receiver
 g++ -std=c++17 -I../LIB -I../INCLUDE protocol_receiver.cpp \
 	../LIB/audio_receiver_lib.cpp ../LIB/audio_comm.cpp \
 	../LIB/frequency_detector_lib.cpp ../SRC/CRC.cpp ../SRC/command_protocol.cpp \
 	-o protocol_receiver -lportaudio -lfftw3 -lm -lpthread
+```
 
-# Velocity provider (as part of larger program)
-g++ -std=c++17 -I../INCLUDE velocityProvider.cpp -c -o velocityProvider.o
+ROS program
+```bash
+cd ~/code_ws
+colcon build --symlink-install
+```
+
+### Running ROS
+In one terminal run
+```bash
+ros2 launch turtlebot3_bringup robot.launch.py
+```
+
+In the second terminal run
+```bash
+source ~/code_ws/install/local_setup.bash
+ros2 run rb3_package_cpp rb3_node_cpp
 ```
 
 ## Notes
