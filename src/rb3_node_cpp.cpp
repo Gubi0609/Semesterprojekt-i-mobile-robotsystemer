@@ -121,7 +121,9 @@ class RB3_cpp_publisher : public rclcpp::Node{
         // Set continuous forward drive at specified speed (0-100 range)
         provider->setVel(speed);  // VelocityProvider expects 0-100 range directly
         provider->setRot(0.0f);   // No rotation for forward drive
-        provider->setState(VelocityProvider::State::IDLE);  // Continuous mode uses IDLE state
+
+		// State should not be set. NEED PROVIDER FUNCTION FOR CONTINOUS DRIVE
+        provider->setState(VelocityProvider::State::IDLE); 
       });
 
       protocol.setTurnCallback([provider](const TurnCommand& cmd){
@@ -130,7 +132,9 @@ class RB3_cpp_publisher : public rclcpp::Node{
         // Set continuous turn at specified rate (-100 to +100 range)
         provider->setVel(0.0f);     // No forward movement for pure turn
         provider->setRot(turnRate); // VelocityProvider expects -100 to +100 range directly
-        provider->setState(VelocityProvider::State::IDLE);  // Continuous mode uses IDLE state
+
+		// State should not be set. NEED PROVIDER FUNCTION FOR CONTINOUS DRIVE
+        provider->setState(VelocityProvider::State::IDLE); 
       });
 
       protocol.setModeChangeCallback([this](RobotMode mode){
