@@ -7,6 +7,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <thread>
+#include <chrono>
 
 // Forward declarations
 void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t command,
@@ -154,8 +156,15 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				std::cout << " Sending STOP\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+				// First send RESET to enter MODE_SELECT state
+				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET (preparing for STOP)", 0.8, true, true);
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));  // Brief pause
+				// Then send STOP mode
 				sendCommandWithRetry(transmitter, crc, encodeStop(), "STOP", 0.8, true, true);
-				std::cout << "\n STOP sent (still in " << stateToString(currentState) << " mode)\n";
+				std::cout << "\n✓ STOP sequence sent (RESET → STOP)\n";
+				std::cout << "   Robot should now be stopped and in MODE_SELECT\n";
+				// Update state to reflect we're back in mode selection
+				currentState = RobotState::NO_MODE;
 				continue;
 			}
 
