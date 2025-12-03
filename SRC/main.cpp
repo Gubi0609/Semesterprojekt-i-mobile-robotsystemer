@@ -58,7 +58,6 @@ int main(int argc, char* argv[]) {
 
     
     // Initialize database
-    
     Database db("tracking.db");
     if (!db.open()) {
         std::cerr << "Failed to open database\n";
@@ -67,8 +66,7 @@ int main(int argc, char* argv[]) {
     db.createTables();
 
     
-    // Log the PC transmission
-    
+    // Log the PC transmission    
     std::string command = "TRANSMIT_CHORD";
     std::string bits_raw = std::to_string(originalData);
     std::string bits_encoded = std::to_string(encodedData);
@@ -77,9 +75,7 @@ int main(int argc, char* argv[]) {
 
     logPCData(db, command, bits_raw, bits_encoded, speed, duration);
 
-    // -----------------------
     // Create and configure transmitter
-    // -----------------------
     AudioComm::ChordTransmitter transmitter;
     AudioComm::ChordTransmitter::Config txConfig;
     txConfig.toneDuration = duration; // transmit for 2 seconds
