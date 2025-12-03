@@ -50,15 +50,13 @@ public:
     void updatePreFunc(int p);
 
 private:
-    //using recursive mutex
-    mutable std::recursive_mutex remu_;
-    //mutable std::mutex mu_; //creates a mutex object
+    mutable std::mutex mu_; //creates a mutex object
     float linear_x_;
     float angular_z_;
     // Input and physical limits
-    // Users should provide linear velocity in range [0 .. 100]
-    // which will be mapped to physical linear [0 .. PHYS_MAX_LINEAR]
-    static constexpr float INPUT_MIN_LINEAR = 0.0f;
+    // Users should provide linear velocity in range [-100 .. 100]
+    // which will be mapped to physical linear [-0.22 .. PHYS_MAX_LINEAR]
+    static constexpr float INPUT_MIN_LINEAR = -100.0f;
     static constexpr float INPUT_MAX_LINEAR = 100.0f;
     static constexpr float PHYS_MAX_LINEAR = 0.22f;
 
