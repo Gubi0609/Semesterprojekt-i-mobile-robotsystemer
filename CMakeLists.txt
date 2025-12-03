@@ -72,8 +72,8 @@ set(LIB_SOURCES
 )
 
 set(DATABASE_SOURCES
-	SRC/Database.cpp
-	SRC/Logger.cpp
+	DATABASE/Database.cpp
+	DATABASE/Logger.cpp
 )
 
 set(COMMON_SOURCES
