@@ -287,7 +287,7 @@ int main() {
 	CRC crc;
 
 	// Initialize database
-	Database db("protocol_communication.db");
+	Database db("TEST_RESULTS/protocol_communication.db");
 	if (!db.open()) {
 		std::cerr << "Failed to open database. Continuing without logging...\n";
 	} else if (!db.createTables()) {
