@@ -1,6 +1,7 @@
 #pragma once
 #include <sqlite3.h>
 #include <string>
+#include <cstdint>
 
 class Database {
 public:
@@ -10,9 +11,10 @@ public:
     void close();
     bool createTables();
     
-    // Insert a record into the PC table
-    bool insertPC(const std::string& timeStamp,
-                  const std::string& command,
+    // Insert a record into the SentData table
+    bool insertSent(int64_t startTimeStamp,
+                    int64_t endTimeStamp,
+                    const std::string& command,
                   float speed,
                   float turnSpeed,
                   float duration,
@@ -23,11 +25,11 @@ public:
                   float tone2,
                   float tone3,
                   float tone4,
-                  bool intConfirmationRec);
+                  int intConfirmationRec);
     
-    // Insert a record into the PI table
-    bool insertPI(const std::string& timeStamp,
-                  float tone1,
+    // Insert a record into the ReceivedData table
+    bool insertReceived(int64_t timeStamp,
+                        float tone1,
                   float tone2,
                   float tone3,
                   float tone4,
@@ -38,7 +40,7 @@ public:
                   float speed,
                   float turnSpeed,
                   float duration,
-                  bool intConfirmationSen);
+                  int intConfirmationSen);
 
 private:
     sqlite3* db = nullptr;

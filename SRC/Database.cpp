@@ -39,10 +39,11 @@ bool Database::execute(const std::string& sql) {
 
 // Create tables
 bool Database::createTables() {
-    std::string createPCTable =
-        "CREATE TABLE IF NOT EXISTS PCData ("
+    std::string createSentTable =
+        "CREATE TABLE IF NOT EXISTS SentData ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "timeStamp TEXT,"
+        "startTimeStamp INTEGER,"
+        "endTimeStamp INTEGER,"
         "command TEXT,"
         "speed REAL,"
         "turnSpeed REAL,"
@@ -57,10 +58,10 @@ bool Database::createTables() {
         "intConfirmationRec INTEGER"
         ");";
     
-    std::string createPITable =
-        "CREATE TABLE IF NOT EXISTS PIData ("
+    std::string createReceivedTable =
+        "CREATE TABLE IF NOT EXISTS ReceivedData ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "timeStamp TEXT,"
+        "timeStamp INTEGER,"
         "tone1 REAL,"
         "tone2 REAL,"
         "tone3 REAL,"
@@ -75,12 +76,13 @@ bool Database::createTables() {
         "intConfirmationSen INTEGER"
         ");";
     
-    return execute(createPCTable) && execute(createPITable);
+    return execute(createSentTable) && execute(createReceivedTable);
 }
 
-// Insert a record into PC table
-bool Database::insertPC(const std::string& timeStamp,
-                        const std::string& command,
+// Insert a record into SentData table
+bool Database::insertSent(int64_t startTimeStamp,
+                          int64_t endTimeStamp,
+                          const std::string& command,
                         float speed,
                         float turnSpeed,
                         float duration,
@@ -91,50 +93,51 @@ bool Database::insertPC(const std::string& timeStamp,
                         float tone2,
                         float tone3,
                         float tone4,
-                        bool intConfirmationRec)
+                        int intConfirmationRec)
 {
     sqlite3_stmt* stmt;
     std::string sql =
-        "INSERT INTO PCData (timeStamp, command, speed, turnSpeed, duration, "
+        "INSERT INTO SentData (startTimeStamp, endTimeStamp, command, speed, turnSpeed, duration, "
         "commandBitRaw, commandBitDecoded, commandBitEncoded, "
         "tone1, tone2, tone3, tone4, intConfirmationRec) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare PC statement: " << sqlite3_errmsg(db) << "\n";
+        std::cerr << "Failed to prepare SentData statement: " << sqlite3_errmsg(db) << "\n";
         return false;
     }
     
     // Bind parameters
-    sqlite3_bind_text(stmt, 1, timeStamp.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, command.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_double(stmt, 3, speed);
-    sqlite3_bind_double(stmt, 4, turnSpeed);
-    sqlite3_bind_double(stmt, 5, duration);
-    sqlite3_bind_text(stmt, 6, commandBitRaw.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 7, commandBitDecoded.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 8, commandBitEncoded.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_double(stmt, 9, tone1);
-    sqlite3_bind_double(stmt, 10, tone2);
-    sqlite3_bind_double(stmt, 11, tone3);
-    sqlite3_bind_double(stmt, 12, tone4);
-    sqlite3_bind_int(stmt, 13, intConfirmationRec ? 1 : 0);
+    sqlite3_bind_int64(stmt, 1, startTimeStamp);
+    sqlite3_bind_int64(stmt, 2, endTimeStamp);
+    sqlite3_bind_text(stmt, 3, command.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_double(stmt, 4, speed);
+    sqlite3_bind_double(stmt, 5, turnSpeed);
+    sqlite3_bind_double(stmt, 6, duration);
+    sqlite3_bind_text(stmt, 7, commandBitRaw.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 8, commandBitDecoded.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 9, commandBitEncoded.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_double(stmt, 10, tone1);
+    sqlite3_bind_double(stmt, 11, tone2);
+    sqlite3_bind_double(stmt, 12, tone3);
+    sqlite3_bind_double(stmt, 13, tone4);
+    sqlite3_bind_int(stmt, 14, intConfirmationRec);
     
     // Execute
     int result = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
     
     if (result != SQLITE_DONE) {
-        std::cerr << "Failed to execute PC insert: " << sqlite3_errmsg(db) << "\n";
+        std::cerr << "Failed to execute SentData insert: " << sqlite3_errmsg(db) << "\n";
         return false;
     }
     
     return true;
 }
 
-// Insert a record into PI table
-bool Database::insertPI(const std::string& timeStamp,
-                        float tone1,
+// Insert a record into ReceivedData table
+bool Database::insertReceived(int64_t timeStamp,
+                              float tone1,
                         float tone2,
                         float tone3,
                         float tone4,
@@ -145,22 +148,22 @@ bool Database::insertPI(const std::string& timeStamp,
                         float speed,
                         float turnSpeed,
                         float duration,
-                        bool intConfirmationSen)
+                        int intConfirmationSen)
 {
     sqlite3_stmt* stmt;
     std::string sql =
-        "INSERT INTO PIData (timeStamp, tone1, tone2, tone3, tone4, "
+        "INSERT INTO ReceivedData (timeStamp, tone1, tone2, tone3, tone4, "
         "commandEncoded, crc, commandDecoded, command, "
         "speed, turnSpeed, duration, intConfirmationSen) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
-        std::cerr << "Failed to prepare PI statement: " << sqlite3_errmsg(db) << "\n";
+        std::cerr << "Failed to prepare ReceivedData statement: " << sqlite3_errmsg(db) << "\n";
         return false;
     }
     
     // Bind parameters
-    sqlite3_bind_text(stmt, 1, timeStamp.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 1, timeStamp);
     sqlite3_bind_double(stmt, 2, tone1);
     sqlite3_bind_double(stmt, 3, tone2);
     sqlite3_bind_double(stmt, 4, tone3);
@@ -172,14 +175,14 @@ bool Database::insertPI(const std::string& timeStamp,
     sqlite3_bind_double(stmt, 10, speed);
     sqlite3_bind_double(stmt, 11, turnSpeed);
     sqlite3_bind_double(stmt, 12, duration);
-    sqlite3_bind_int(stmt, 13, intConfirmationSen ? 1 : 0);
+    sqlite3_bind_int(stmt, 13, intConfirmationSen);
     
     // Execute
     int result = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
     
     if (result != SQLITE_DONE) {
-        std::cerr << "Failed to execute PI insert: " << sqlite3_errmsg(db) << "\n";
+        std::cerr << "Failed to execute ReceivedData insert: " << sqlite3_errmsg(db) << "\n";
         return false;
     }
     
