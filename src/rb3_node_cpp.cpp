@@ -449,71 +449,101 @@ const double consistencyWindow = 0.3;
       					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "DECODED command: 0x%03X", command);
 
       					// Prepare data for database logging
-      					 					ReceptionData rxData;
-      					 					rxData.timestamp = getCurrentTimestampMs();
-      					 					for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
-      					 						switch(i) {
-      					 							case 0: rxData.tone1 = detectedFreqs[i]; break;
-      					 							case 1: rxData.tone2 = detectedFreqs[i]; break;
-      					 							case 2: rxData.tone3 = detectedFreqs[i]; break;
-      					 							case 3: rxData.tone4 = detectedFreqs[i]; break;
-      					 						}
-      					 					}
-      					 					rxData.commandBitEncoded = chordValue;
-      					 					rxData.crcValid = true;
-      					 					rxData.commandBitDecoded = command;
-      					 					rxData.confirmationSent = 1;  // Positive confirmation
+      					ReceptionData rxData;
+      					rxData.timestamp = getCurrentTimestampMs();
+      					for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
+      						switch(i) {
+      							case 0: rxData.tone1 = detectedFreqs[i]; break;
+      							case 1: rxData.tone2 = detectedFreqs[i]; break;
+      							case 2: rxData.tone3 = detectedFreqs[i]; break;
+      							case 3: rxData.tone4 = detectedFreqs[i]; break;
+      						}
+      					}
+      					rxData.commandBitEncoded = chordValue;
+      					rxData.crcValid = true;
+      					rxData.commandBitDecoded = command;
+      					rxData.confirmationSent = 1;  // Positive confirmation
 
-      					 					// Decode command type and parameters for logging
-      					 					std::string cmdType = "UNKNOWN";
-      					 					uint8_t cmdTypeValue = command & 0x7;
-      					 					switch(cmdTypeValue) {
-      					 						case 0: cmdType = "RESET"; break;
-      					 						case 1: {
-      					 							cmdType = "DRIVE_FOR_DURATION";
-      					 							auto driveCmd = DriveForDurationCommand::decode(command);
-      					 							rxData.speed = driveCmd.getSpeedPercent();
-      					 							rxData.duration = driveCmd.getDurationSeconds();
-      					 							break;
-      					 						}
-      					 						case 2: {
-      					 							cmdType = "TURN_FOR_DURATION";
-      					 							auto turnCmd = TurnForDurationCommand::decode(command);
-      					 							rxData.turnSpeed = turnCmd.getTurnRatePercent();
-      					 							rxData.duration = turnCmd.getDurationSeconds();
-      					 							break;
-      					 						}
-      					 						case 3: {
-      					 							cmdType = "DRIVE_FORWARD";
-      					 							auto driveCmd = DriveForwardCommand::decode(command);
-      					 							rxData.speed = driveCmd.getSpeedPercent();
-      					 							break;
-      					 						}
-      					 						case 4: {
-      					 							cmdType = "TURN";
-      					 							auto turnCmd = TurnCommand::decode(command);
-      					 							rxData.turnSpeed = turnCmd.getTurnRatePercent();
-      					 							break;
-      					 						}
-      					 						case 5: cmdType = "STOP"; break;
-      					 						default: cmdType = "RESERVED"; break;
-      					 					}
-      					 					rxData.command = cmdType;
+      					// Determine command type based on protocol state machine
+      					std::string cmdType = "UNKNOWN";
 
-      					 					// Play success sound before processing command
-      					 					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
-      					 						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
-      					 					}).detach();
+      					if (command == RESET_SIGNAL) {
+      						// This is always a RESET command
+      						cmdType = "RESET";
+      					} else if (protocol.isWaitingForModeSelect()) {
+      						// After RESET, this command selects the mode (no parameters yet)
+      						switch (static_cast<RobotMode>(command)) {
+      							case RobotMode::DRIVE_FOR_DURATION:
+      								cmdType = "MODE_DRIVE_FOR_DURATION";
+      								break;
+      							case RobotMode::TURN_FOR_DURATION:
+      								cmdType = "MODE_TURN_FOR_DURATION";
+      								break;
+      							case RobotMode::DRIVE_FORWARD:
+      								cmdType = "MODE_DRIVE_FORWARD";
+      								break;
+      							case RobotMode::TURN:
+      								cmdType = "MODE_TURN";
+      								break;
+      							case RobotMode::STOP:
+      								cmdType = "STOP";
+      								break;
+      							default:
+      								cmdType = "MODE_UNKNOWN";
+      								break;
+      						}
+      						// No speed/duration/turnSpeed for mode selection commands
+      					} else {
+      						// Mode already selected - this command contains parameters
+      						RobotMode currentMode = protocol.getCurrentMode();
+      						switch (currentMode) {
+      							case RobotMode::DRIVE_FOR_DURATION: {
+      								cmdType = "DRIVE_FOR_DURATION_PARAMS";
+      								auto driveCmd = DriveForDurationCommand::decode(command);
+      								rxData.speed = driveCmd.getSpeedPercent();
+      								rxData.duration = driveCmd.getDurationSeconds();
+      								break;
+      							}
+      							case RobotMode::TURN_FOR_DURATION: {
+      								cmdType = "TURN_FOR_DURATION_PARAMS";
+      								auto turnCmd = TurnForDurationCommand::decode(command);
+      								rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      								rxData.duration = turnCmd.getDurationSeconds();
+      								break;
+      							}
+      							case RobotMode::DRIVE_FORWARD: {
+      								cmdType = "DRIVE_FORWARD_PARAMS";
+      								auto driveCmd = DriveForwardCommand::decode(command);
+      								rxData.speed = driveCmd.getSpeedPercent();
+      								break;
+      							}
+      							case RobotMode::TURN: {
+      								cmdType = "TURN_PARAMS";
+      								auto turnCmd = TurnCommand::decode(command);
+      								rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      								break;
+      							}
+      							default:
+      								cmdType = "PARAMS_UNKNOWN";
+      								break;
+      						}
+      					}
+      					rxData.command = cmdType;
 
-      					 					// Log successful reception to database
-      					 					if (this->db_) {
-      					 						this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2,
-      					 							rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
-      					 							rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
-      					 							rxData.duration, rxData.confirmationSent);
-      					 					}
+      					// Play success sound before processing command
+      					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
+      						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
+      					}).detach();
 
-      					 					protocol.processCommand(command);
+      					// Log successful reception to database
+      					if (this->db_) {
+      						this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2,
+      							rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
+      							rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
+      							rxData.duration, rxData.confirmationSent);
+      					}
+
+      					protocol.processCommand(command);
 
       					lastValue = decodedValue;
       					lastTimestamp = now;
