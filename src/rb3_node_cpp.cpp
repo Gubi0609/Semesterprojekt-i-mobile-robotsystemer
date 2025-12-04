@@ -21,13 +21,20 @@
 #include "../INCLUDE/CRC.h"
 #include "../INCLUDE/command_protocol.h"
 #include "../INCLUDE/Database.h"
-#include "../INCLUDE/Logger.h"
 #include "../INCLUDE/Database.h"
 #include "../INCLUDE/Logger.h"
 
 #include "velocityProvider.hpp"   // <-- new
 using namespace std;
 using namespace std::chrono_literals; // for 1000ms
+
+// Helper function to get current timestamp in milliseconds
+int64_t getCurrentTimestampMs() {
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    return ms;
+}
 
 class RB3_cpp_publisher : public rclcpp::Node{
   public:
