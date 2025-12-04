@@ -71,14 +71,18 @@ void VelocityProvider::update(){
 	} else if(state_ == State::DURATION){ //kan med fordel bruge switch (godt)
 
 			//indsæt logik til at checke at values nu ikke er lig prev values.
-			if(prev_angular_z_ !=angular_z_ || prev_linear_x_ != linear_x_ || prev_state_ != state_ || customDuration != prev_custom_duration){
-				updatePrevValues();
+			if(updateDurationValues){
+				updateDurationValues = false;
 				end_time_ = std::chrono::steady_clock::now() +
 					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
-
 			}
 			checkDurationExpiry();
+	} else if (state_ == State::CONTINUOUS)
+	{
+		prev_state_ = state_;
+		//logging here? maybe
 	}
+	
 }
 
 void VelocityProvider::setState(State state){
@@ -91,6 +95,7 @@ void VelocityProvider::forwardForDuration(float seconds, float linear){
 	state_ = State::DURATION;
 	setVel(linear);
 	customDuration = seconds;
+	updateDurationValues = true;
 }
 
 void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
@@ -98,6 +103,23 @@ void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
 	state_ = State::DURATION;
 	customDuration = seconds;
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin, rot);
+	setVel(adjustedLin);
+	setRot(adjustedRot);
+	updateDurationValues = true;
+}
+
+void VelocityProvider::driveContinuous(float lin){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
+	state_ = State::CONTINUOUS;
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin,0.0f);
+	setVel(adjustedLin);
+	setRot(adjustedRot);
+}
+
+void VelocityProvider::turnContinuous(float rot){
+	std::lock_guard<std::recursive_mutex> lk(remu_);
+	state_ = State::CONTINUOUS;
+	auto[adjustedLin, adjustedRot] = adjustLinAndRot(0.0f, rot);
 	setVel(adjustedLin);
 	setRot(adjustedRot);
 }
@@ -118,6 +140,7 @@ void VelocityProvider::turnForDuration(float seconds, float rotational){
 	state_ = State::DURATION;
 	setRot(rotational);
 	customDuration = seconds;
+	updateDurationValues = true;
 }
 
 void VelocityProvider::setEnableDriving(bool b) {

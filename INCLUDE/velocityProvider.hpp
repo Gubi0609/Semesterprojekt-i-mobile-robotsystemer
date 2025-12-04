@@ -11,7 +11,6 @@
 
 //to use fabs(float abs)
 #include <cmath>
-//#include eliasclass.cpp
 
 
 class VelocityProvider {
@@ -25,7 +24,7 @@ public:
     void setRot(float f);
     void checkDurationExpiry(); 
 
-    enum class State {IDLE, DURATION};
+    enum class State {IDLE, DURATION, CONTINUOUS};
     State state() const {return state_;}
 
     void update(); //update state
@@ -43,6 +42,8 @@ public:
     void forwardForDuration(float s, float linear);
     void turnForDuration(float s, float rotational);
     void driveForDuration(float s, float linear, float rotational);
+    void driveContinuous(float linear);
+    void turnContinuous(float rotational);
 
     std::tuple<float, float> adjustLinAndRot(float linear, float rotational);
 
@@ -73,6 +74,7 @@ private:
     //dont know if these are usable /relevant
     //bool timeStampSet = false;  
     bool enableDriving = false;
+    bool updateDurationValues = false;
 
     //State data
     State state_ = State::IDLE;

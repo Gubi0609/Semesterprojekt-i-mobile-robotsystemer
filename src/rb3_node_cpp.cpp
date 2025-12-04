@@ -119,7 +119,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	float speed = cmd.getSpeedPercent();
       	RCLCPP_INFO(this->get_logger(), "DRIVE command: %.1fs at %.0f%% speed", d, speed);
       	//drive forward for duration (speed expected in percent 0..100)
-      	provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
+      	provider->forwardForDuration(static_cast<float>(d), speed);
       });
 
       protocol.setTurnForDurationCallback([this, provider](const TurnForDurationCommand& cmd){
@@ -137,6 +137,20 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	provider->setRot(0.0f);
       	provider->setState(VelocityProvider::State::IDLE);
       });
+
+    protocol.setDriveForwardCallback([this, provider](const DriveForwardCommand& cmd){
+  			if(!provider) return;
+  			float speed = cmd.getSpeedPercent();
+  			RCLCPP_INFO(this->get_logger(), "DRIVE CONTINUOUS command: %.0f%% speed", speed);
+  			provider->driveContinuous(speed);
+  		});
+
+  		protocol.setTurnCallback([this, provider](const TurnCommand& cmd){
+  			if(!provider) return;
+  			float turn = cmd.getTurnRatePercent();
+  			RCLCPP_INFO(this->get_logger(), "TURN CONTINUOUS command: %.0f%% turn rate", turn);
+  			provider->turnContinuous(turn);
+  		});
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;
@@ -479,7 +493,7 @@ const double consistencyWindow = 0.3;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz", name, freq);
 				// Use system command to avoid PortAudio conflict, timeout for short beep
 				std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)freq) +
 				                  " -c 2 >/dev/null 2>&1 &";

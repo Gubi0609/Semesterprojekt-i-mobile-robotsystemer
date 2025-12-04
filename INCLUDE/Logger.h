@@ -21,7 +21,7 @@ void logPCData(Database& db,
                float tone2,
                float tone3,
                float tone4,
-               bool intConfirmationRec);
+               int intConfirmationRec);
 
 // Log data from PI
 void logPIData(Database& db,
@@ -36,4 +36,4 @@ void logPIData(Database& db,
                float speed,
                float turnSpeed,
                float duration,
-               bool intConfirmationSen);
+               int intConfirmationSen);

@@ -1,7 +1,16 @@
 #include "../INCLUDE/Logger.h"
 #include <iostream>
+#include <chrono>
 
-// Get current timestamp in ISO 8601 format
+// Get current timestamp in milliseconds since epoch
+int64_t getCurrentTimestampMs() {
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    return ms;
+}
+
+// Get current timestamp in ISO 8601 format (for backwards compatibility)
 std::string getCurrentTimestamp() {
     auto now = std::chrono::system_clock::now();
     auto now_time_t = std::chrono::system_clock::to_time_t(now);
@@ -27,17 +36,18 @@ void logPCData(Database& db,
                float tone2,
                float tone3,
                float tone4,
-               bool intConfirmationRec)
+               int intConfirmationRec)
 {
-    std::string timeStamp = getCurrentTimestamp();
+    int64_t startTime = getCurrentTimestampMs();
+    int64_t endTime = 0; // Will be updated when confirmation is received
     
-    if (!db.insertPC(timeStamp, command, speed, turnSpeed, duration,
-                     commandBitRaw, commandBitDecoded, commandBitEncoded,
-                     tone1, tone2, tone3, tone4, intConfirmationRec))
+    if (!db.insertSent(startTime, endTime, command, speed, turnSpeed, duration,
+                       commandBitRaw, commandBitDecoded, commandBitEncoded,
+                       tone1, tone2, tone3, tone4, intConfirmationRec))
     {
-        std::cerr << "[LOGGER] Failed to insert PC data at " << timeStamp << "\n";
+        std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
     } else {
-        std::cout << "[LOGGER] PC data logged at " << timeStamp << "\n";
+        std::cout << "[LOGGER] SentData logged at timestamp " << startTime << "\n";
     }
 }
 
@@ -53,16 +63,16 @@ void logPIData(Database& db,
                float speed,
                float turnSpeed,
                float duration,
-               bool intConfirmationSen)
+               int intConfirmationSen)
 {
-    std::string timeStamp = getCurrentTimestamp();
+    int64_t timeStamp = getCurrentTimestampMs();
     
-    if (!db.insertPI(timeStamp, tone1, tone2, tone3, tone4,
-                     commandEncoded, crc, commandDecoded, command,
-                     speed, turnSpeed, duration, intConfirmationSen))
+    if (!db.insertReceived(timeStamp, tone1, tone2, tone3, tone4,
+                          commandEncoded, crc, commandDecoded, command,
+                          speed, turnSpeed, duration, intConfirmationSen))
     {
-        std::cerr << "[LOGGER] Failed to insert PI data at " << timeStamp << "\n";
+        std::cerr << "[LOGGER] Failed to insert ReceivedData at timestamp " << timeStamp << "\n";
     } else {
-        std::cout << "[LOGGER] PI data logged at " << timeStamp << "\n";
+        std::cout << "[LOGGER] ReceivedData logged at timestamp " << timeStamp << "\n";
     }
 }
