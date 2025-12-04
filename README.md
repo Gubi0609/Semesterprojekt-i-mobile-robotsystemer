@@ -11,4 +11,5 @@ We've decided to make a layered protocol, that focuses on short commands and err
 
 ## Structure
 SRC - Class .cpp files and computer (sender) code
+
 src - RCLCPP and Raspberry Pi code
