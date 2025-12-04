@@ -29,21 +29,21 @@ void logSentData(Database& db,
                  float speed,
                  float turnSpeed,
                  float duration,
-                 const std::string& commandBitRaw,
-                 const std::string& commandBitDecoded,
-                 const std::string& commandBitEncoded,
+                 uint16_t commandBitDecoded,
+                 uint16_t commandBitEncoded,
                  float tone1,
                  float tone2,
                  float tone3,
                  float tone4,
-                 int intConfirmationRec)
+                 bool hasConfirmation,
+                 int confirmationType)
 {
     int64_t startTime = getCurrentTimestampMs();
     int64_t endTime = 0; // Will be updated when confirmation is received
     
     if (!db.insertSent(startTime, endTime, command, speed, turnSpeed, duration,
-                       commandBitRaw, commandBitDecoded, commandBitEncoded,
-                       tone1, tone2, tone3, tone4, intConfirmationRec))
+                       commandBitDecoded, commandBitEncoded,
+                       tone1, tone2, tone3, tone4, hasConfirmation, confirmationType))
     {
         std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
     } else {
@@ -57,9 +57,9 @@ void logReceivedData(Database& db,
                      float tone2,
                      float tone3,
                      float tone4,
-                     const std::string& commandEncoded,
+                     uint16_t commandBitEncoded,
                      bool crc,
-                     const std::string& commandDecoded,
+                     uint16_t commandBitDecoded,
                      const std::string& command,
                      float speed,
                      float turnSpeed,
@@ -69,7 +69,7 @@ void logReceivedData(Database& db,
     int64_t timeStamp = getCurrentTimestampMs();
     
     if (!db.insertReceived(timeStamp, tone1, tone2, tone3, tone4,
-                          commandEncoded, crc, commandDecoded, command,
+                          commandBitEncoded, crc, commandBitDecoded, command,
                           speed, turnSpeed, duration, intConfirmationSen))
     {
         std::cerr << "[LOGGER] Failed to insert ReceivedData at timestamp " << timeStamp << "\n";
@@ -86,18 +86,21 @@ void logPCData(Database& db,
                float speed,
                float turnSpeed,
                float duration,
-               const std::string& commandBitRaw,
-               const std::string& commandBitDecoded,
-               const std::string& commandBitEncoded,
+               uint16_t commandBitDecoded,
+               uint16_t commandBitEncoded,
                float tone1,
                float tone2,
                float tone3,
                float tone4,
                int intConfirmationRec)
 {
+    // Convert old int confirmation to new format: assume positive if received
+    bool hasConfirmation = (intConfirmationRec != 0);
+    int confirmationType = hasConfirmation ? 1 : 0;  // Default to positive
+    
     logSentData(db, command, speed, turnSpeed, duration,
-                commandBitRaw, commandBitDecoded, commandBitEncoded,
-                tone1, tone2, tone3, tone4, intConfirmationRec);
+                commandBitDecoded, commandBitEncoded,
+                tone1, tone2, tone3, tone4, hasConfirmation, confirmationType);
 }
 
 // Backwards compatibility wrapper
@@ -106,9 +109,9 @@ void logPIData(Database& db,
                float tone2,
                float tone3,
                float tone4,
-               const std::string& commandEncoded,
+               uint16_t commandBitEncoded,
                bool crc,
-               const std::string& commandDecoded,
+               uint16_t commandBitDecoded,
                const std::string& command,
                float speed,
                float turnSpeed,
@@ -116,6 +119,6 @@ void logPIData(Database& db,
                int intConfirmationSen)
 {
     logReceivedData(db, tone1, tone2, tone3, tone4,
-                    commandEncoded, crc, commandDecoded, command,
+                    commandBitEncoded, crc, commandBitDecoded, command,
                     speed, turnSpeed, duration, intConfirmationSen);
 }

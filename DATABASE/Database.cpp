@@ -54,7 +54,7 @@ bool Database::createTables() {
         "tone2 REAL,"
         "tone3 REAL,"
         "tone4 REAL,"
-        "intConfirmationRec INTEGER"
+        "confirmationType INTEGER"  // NULL = no response, 1 = positive, 2 = negative
         ");";
     
     std::string createReceivedTable =
@@ -91,13 +91,14 @@ bool Database::insertSent(int64_t startTimeStamp,
                         float tone2,
                         float tone3,
                         float tone4,
-                        int intConfirmationRec)
+                        bool hasConfirmation,
+                        int confirmationType)
 {
     sqlite3_stmt* stmt;
     std::string sql =
         "INSERT INTO SentData (startTimeStamp, endTimeStamp, command, speed, turnSpeed, duration, "
         "commandBitDecoded, commandBitEncoded, "
-        "tone1, tone2, tone3, tone4, intConfirmationRec) "
+        "tone1, tone2, tone3, tone4, confirmationType) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";;
     
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
@@ -118,7 +119,13 @@ bool Database::insertSent(int64_t startTimeStamp,
     sqlite3_bind_double(stmt, 10, tone2);
     sqlite3_bind_double(stmt, 11, tone3);
     sqlite3_bind_double(stmt, 12, tone4);
-    sqlite3_bind_int(stmt, 13, intConfirmationRec);
+    
+    // Handle confirmation: NULL if no response, 1 for positive, 2 for negative
+    if (hasConfirmation) {
+        sqlite3_bind_int(stmt, 13, confirmationType);
+    } else {
+        sqlite3_bind_null(stmt, 13);  // NULL for no response
+    }
     
     // Execute
     int result = sqlite3_step(stmt);

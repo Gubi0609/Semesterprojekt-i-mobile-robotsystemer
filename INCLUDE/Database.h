@@ -24,7 +24,8 @@ public:
                   float tone2,
                   float tone3,
                   float tone4,
-                  int intConfirmationRec);
+                  bool hasConfirmation,
+                  int confirmationType);
     
     // Insert a record into the ReceivedData table
     bool insertReceived(int64_t timeStamp,

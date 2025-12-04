@@ -4,6 +4,7 @@
 #include "../INCLUDE/command_protocol.h"
 #include "../LIB/audio_transmitter.h"
 #include "../INCLUDE/CRC.h"
+#include "../INCLUDE/Database.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -13,7 +14,8 @@
 // Forward declarations
 void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, uint16_t command,
                           const std::string& description, double duration , 
-                          bool waitForFeedback , bool retryOnce );
+                          bool waitForFeedback , bool retryOnce , Database* db ,
+                          float speed , float turnSpeed , float cmdDuration );
 
 // State tracking
 enum class RobotState {
@@ -62,7 +64,7 @@ void printInModeMenu(RobotState state) {
 	std::cout << "\nChoice: ";
 }
 
-void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
+void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc, Database* db = nullptr) {
 	RobotState currentState = RobotState::NO_MODE;
 	std::string choice;
 	
@@ -116,9 +118,9 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 			std::cout << " Entering mode: " << stateToString(nextState) << "\n";
 			std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 			
-			sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
+			sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true, db, 0.0f, 0.0f, 0.0f);
 			sendCommandWithRetry(transmitter, crc, encodeModeSelect(selectedMode), 
-			                     "Mode: " + stateToString(nextState), 0.8, true, true);
+			                     "Mode: " + stateToString(nextState), 0.8, true, true, db, 0.0f, 0.0f, 0.0f);
 			
 			std::cout << "\n Robot is now in " << stateToString(nextState) << " mode\n";
 			currentState = nextState;
@@ -145,7 +147,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 				std::cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				std::cout << " Sending RESET (returning to mode select)\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true);
+				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET", 0.8, true, true, db, 0.0f, 0.0f, 0.0f);
 				currentState = RobotState::NO_MODE;
 				std::cout << "\n Back to mode select\n";
 				continue;
@@ -157,10 +159,10 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 				std::cout << " Sending STOP\n";
 				std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 				// First send RESET to enter MODE_SELECT state
-				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET (preparing for STOP)", 0.8, true, true);
+				sendCommandWithRetry(transmitter, crc, encodeReset(), "RESET (preparing for STOP)", 0.8, true, true, db, 0.0f, 0.0f, 0.0f);
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));  // Brief pause
 				// Then send STOP mode
-				sendCommandWithRetry(transmitter, crc, encodeStop(), "STOP", 0.8, true, true);
+				sendCommandWithRetry(transmitter, crc, encodeStop(), "STOP", 0.8, true, true, db, 0.0f, 0.0f, 0.0f);
 				std::cout << "\n✓ STOP sequence sent (RESET → STOP)\n";
 				std::cout << "   Robot should now be stopped and in MODE_SELECT\n";
 				// Update state to reflect we're back in mode selection
@@ -182,7 +184,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 
 					sendCommandWithRetry(transmitter, crc, encodeDriveForDuration(duration, speed),
 					                     "Drive " + std::to_string(duration) + "s at " + std::to_string((int)speed) + "%",
-					                     0.8, true, true);
+					                     0.8, true, true, db, speed, 0.0f, duration);
 
 				} else if (currentState == RobotState::TURN_FOR_DURATION) {
 					float duration, turnRate;
@@ -194,7 +196,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 
 					sendCommandWithRetry(transmitter, crc, encodeTurnForDuration(duration, turnRate),
 					                     "Turn " + std::to_string(duration) + "s at " + std::to_string((int)turnRate) + "%",
-					                     0.8, true, true);
+					                     0.8, true, true, db, 0.0f, turnRate, duration);
 
 				} else if (currentState == RobotState::DRIVE_CONTINUOUS) {
 					float speed;
@@ -204,7 +206,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 
 					sendCommandWithRetry(transmitter, crc, encodeDriveForward(speed),
 					                     "Drive forward at " + std::to_string((int)speed) + "%",
-					                     0.8, true, true);
+					                     0.8, true, true, db, speed, 0.0f, 0.0f);
 
 				} else if (currentState == RobotState::TURN_CONTINUOUS) {
 					float turnRate;
@@ -214,7 +216,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc) {
 
 					sendCommandWithRetry(transmitter, crc, encodeTurn(turnRate),
 					                     "Turn at " + std::to_string((int)turnRate) + "%",
-					                     0.8, true, true);
+					                     0.8, true, true, db, 0.0f, turnRate, 0.0f);
 					
 				} else if (currentState == RobotState::STOP_MODE) {
 					std::cout << "Already in STOP mode. Use 'R' to return to mode select.\n";
