@@ -61,6 +61,10 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   	//start the protocol receiver thread if provider present
   	if(provider_){
+  		// Pass database to velocity provider for logging
+  		if (db_) {
+  			provider_->setDatabase(db_.get());
+  		}
   		startProtocolReceiver();
   		startKeyboardListener();  // Start keyboard listener for manual feedback testing
   	}
@@ -448,72 +452,13 @@ const double consistencyWindow = 0.3;
       					validChords++;
       					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "DECODED command: 0x%03X", command);
 
-      					// Prepare data for database logging
-      					ReceptionData rxData;
-      					rxData.timestamp = getCurrentTimestampMs();
-      					for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
-      						switch(i) {
-      							case 0: rxData.tone1 = detectedFreqs[i]; break;
-      							case 1: rxData.tone2 = detectedFreqs[i]; break;
-      							case 2: rxData.tone3 = detectedFreqs[i]; break;
-      							case 3: rxData.tone4 = detectedFreqs[i]; break;
-      						}
-      					}
-      					rxData.commandBitEncoded = chordValue;
-      					rxData.crcValid = true;
-      					rxData.commandBitDecoded = command;
-      					rxData.confirmationSent = 1;  // Positive confirmation
-      					
-      					// Decode command type and parameters using the actual protocol methods
-      					std::string cmdType = "UNKNOWN";
-      					uint8_t cmdTypeValue = command & 0x7;
-      					switch(cmdTypeValue) {
-      						case 0: cmdType = "RESET"; break;
-      						case 1: {
-      							cmdType = "DRIVE_FOR_DURATION";
-      							auto driveCmd = DriveForDurationCommand::decode(command);
-      							rxData.speed = driveCmd.getSpeedPercent();
-      							rxData.duration = driveCmd.getDurationSeconds();
-      							break;
-      						}
-      						case 2: {
-      							cmdType = "TURN_FOR_DURATION";
-      							auto turnCmd = TurnForDurationCommand::decode(command);
-      							rxData.turnSpeed = turnCmd.getTurnRatePercent();
-      							rxData.duration = turnCmd.getDurationSeconds();
-      							break;
-      						}
-      						case 3: {
-      							cmdType = "DRIVE_FORWARD";
-      							auto driveCmd = DriveForwardCommand::decode(command);
-      							rxData.speed = driveCmd.getSpeedPercent();
-      							break;
-      						}
-      						case 4: {
-      							cmdType = "TURN";
-      							auto turnCmd = TurnCommand::decode(command);
-      							rxData.turnSpeed = turnCmd.getTurnRatePercent();
-      							break;
-      						}
-      						case 5: cmdType = "STOP"; break;
-      						default: cmdType = "RESERVED"; break;
-      					}
-      					rxData.command = cmdType;
-
       					// Play success sound (18.5 kHz) before processing command
-      					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
-      						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
-      					}).detach();
+      					 					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
+      					 						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
+      					 					}).detach();
 
-      					// Log successful reception to database
-      					if (this->db_) {
-      						this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2, 
-      							rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
-      							rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
-      							rxData.duration, rxData.confirmationSent);
-      					}
-
-      					protocol.processCommand(command);
+      					 					// Process command - VelocityProvider will log speed/duration/turnSpeed
+      					 					protocol.processCommand(command);
 
       					lastValue = decodedValue;
       					lastTimestamp = now;

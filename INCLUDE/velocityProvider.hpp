@@ -12,11 +12,16 @@
 //to use fabs(float abs)
 #include <cmath>
 
+// Forward declaration to avoid circular dependency
+class Database;
 
 class VelocityProvider {
 public:
 	VelocityProvider();
     virtual ~VelocityProvider() = default;
+
+    // Set database for logging (optional, can be nullptr)
+    void setDatabase(Database* db);
     
     float getVel(); //return linear x
     float getRot(); //return angular z
@@ -90,4 +95,6 @@ private:
 
     int presetFunctionality = 0;
     
+    // Database for logging (not owned, can be nullptr)
+    Database* db_ = nullptr;
 };
