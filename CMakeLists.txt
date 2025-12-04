@@ -91,7 +91,6 @@ if(BUILD_DESKTOP)
 	# Sender program (main.cpp)
 	add_executable(sender
 		SRC/main.cpp
-		SRC/UI.cpp
 		${COMMON_SOURCES}
 		${LIB_SOURCES}
 		${DATABASE_SOURCES}
@@ -109,10 +108,12 @@ if(BUILD_DESKTOP)
 		SRC/protocol_sender.cpp
 		${COMMON_SOURCES}
 		${LIB_SOURCES}
+		${DATABASE_SOURCES}
 	)
 	target_link_libraries(protocol_sender
 		${PORTAUDIO_LIBRARIES}
 		${FFTW3_LIBRARY}
+		SQLite::SQLite3
 		m
 		pthread
 	)
