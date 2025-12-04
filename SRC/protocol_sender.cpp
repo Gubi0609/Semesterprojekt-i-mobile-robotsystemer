@@ -7,9 +7,11 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <ctime>
 
 // Helper to print command information
 void printCommandInfo(const std::string& description, uint16_t bits) {
@@ -36,7 +38,7 @@ struct TransmissionData {
 };
 
 // Helper to get current timestamp in milliseconds
-int64_t getCurrentTimestampMs() {
+static int64_t getCurrentTimestampMs() {
 	auto now = std::chrono::system_clock::now();
 	auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 		now.time_since_epoch()).count();
@@ -236,21 +238,27 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 	// Log to database if database is provided
 	if (db != nullptr) {
+		// Calculate response time (0 if no confirmation)
+		int64_t responseTime = 0;
+		if (txData.endTime > 0 && txData.startTime > 0) {
+			responseTime = txData.endTime - txData.startTime;
+		}
+
 		// If no confirmation was received, set endTime to 0
 		if (txData.endTime == 0 && (!waitForFeedback || !success)) {
 			// For commands without feedback or failed commands, we don't set an endTime
 			std::cout << "[DB] Logging transmission without confirmation...\n";
 		} else if (txData.endTime > 0) {
-			std::cout << "[DB] Logging transmission with confirmation (response time: " 
-					  << (txData.endTime - txData.startTime) << " ms)...\n";
+			std::cout << "[DB] Logging transmission with confirmation (response time: "
+					  << responseTime << " ms)...\n";
 		}
 
-		bool logged = db->insertSent(txData.startTime, txData.endTime, txData.command,
+		bool logged = db->insertSent(txData.startTime, txData.endTime, responseTime, txData.command,
 									  txData.speed, txData.turnSpeed, txData.duration,
 									  txData.commandBitDecoded, txData.commandBitEncoded,
 									  txData.tone1, txData.tone2, txData.tone3, txData.tone4,
 									  txData.hasConfirmation, txData.confirmationType);
-		
+
 		if (!logged) {
 			std::cerr << "[DB] Failed to log transmission data\n";
 		}
@@ -296,6 +304,23 @@ int main() {
 	runStateMachineUI(transmitter, crc, &db);
 
 	std::cout << "\n Shutting down...\n";
+
+	// Generate timestamped log filename in TEST_RESULTS folder
+	auto now = std::chrono::system_clock::now();
+	auto time_t_now = std::chrono::system_clock::to_time_t(now);
+	std::tm* tm_now = std::localtime(&time_t_now);
+	std::ostringstream logFileName;
+	logFileName << "../TEST_RESULTS/protocol_log_"
+	            << std::put_time(tm_now, "%Y%m%d_%H%M%S")
+	            << ".txt";
+
+	std::cout << "Dumping database to " << logFileName.str() << "...\n";
+	if (db.dumpToLog(logFileName.str())) {
+		std::cout << "Database log saved successfully.\n";
+	} else {
+		std::cerr << "Failed to save database log.\n";
+	}
+
 	db.close();
 	return 0;
 }

@@ -25,31 +25,32 @@ std::string getCurrentTimestamp() {
 }
 
 void logSentData(Database& db,
-                 const std::string& command,
-                 float speed,
-                 float turnSpeed,
-                 float duration,
-                 uint16_t commandBitDecoded,
-                 uint16_t commandBitEncoded,
-                 float tone1,
-                 float tone2,
-                 float tone3,
-                 float tone4,
-                 bool hasConfirmation,
-                 int confirmationType)
+    const std::string& command,
+    float speed,
+    float turnSpeed,
+    float duration,
+    uint16_t commandBitDecoded,
+    uint16_t commandBitEncoded,
+    float tone1,
+    float tone2,
+    float tone3,
+    float tone4,
+    bool hasConfirmation,
+    int confirmationType)
 {
-    int64_t startTime = getCurrentTimestampMs();
-    int64_t endTime = 0; // Will be updated when confirmation is received
-    
-    if (!db.insertSent(startTime, endTime, command, speed, turnSpeed, duration,
-                       commandBitDecoded, commandBitEncoded,
-                       tone1, tone2, tone3, tone4, hasConfirmation, confirmationType))
-    {
-        std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
-    } else {
-        std::cout << "[LOGGER] SentData logged - Command: " << command 
-                  << ", Timestamp: " << startTime << "\n";
-    }
+ int64_t startTime = getCurrentTimestampMs();
+ int64_t endTime = 0; // Will be updated when confirmation is received
+ int64_t responseTime = 0; // No response time for this legacy function
+
+ if (!db.insertSent(startTime, endTime, responseTime, command, speed, turnSpeed, duration,
+     commandBitDecoded, commandBitEncoded,
+     tone1, tone2, tone3, tone4, hasConfirmation, confirmationType))
+ {
+  std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
+ } else {
+  std::cout << "[LOGGER] SentData logged - Command: " << command
+    << ", Timestamp: " << startTime << "\n";
+ }
 }
 
 void logReceivedData(Database& db,

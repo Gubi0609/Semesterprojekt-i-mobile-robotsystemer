@@ -10,10 +10,14 @@ public:
     bool open();
     void close();
     bool createTables();
+
+    // Dump database contents to a log file
+    bool dumpToLog(const std::string& logFileName);
     
     // Insert a record into the SentData table
     bool insertSent(int64_t startTimeStamp,
                     int64_t endTimeStamp,
+                    int64_t responseTime,
                     const std::string& command,
                   float speed,
                   float turnSpeed,
