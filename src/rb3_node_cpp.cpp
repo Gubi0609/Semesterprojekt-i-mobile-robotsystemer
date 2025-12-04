@@ -464,30 +464,41 @@ const double consistencyWindow = 0.3;
       					rxData.commandBitDecoded = command;
       					rxData.confirmationSent = 1;  // Positive confirmation
       					
-      					// Decode command type and parameters
+      					// Decode command type and parameters using the actual protocol methods
       					std::string cmdType = "UNKNOWN";
-      					switch(command & 0x7) {  // Extract command type (bits 0-2)
+      					uint8_t cmdTypeValue = command & 0x7;
+      					switch(cmdTypeValue) {
       						case 0: cmdType = "RESET"; break;
-      						case 1: cmdType = "DRIVE_FOR_DURATION"; break;
-      						case 2: cmdType = "TURN_FOR_DURATION"; break;
-      						case 3: cmdType = "DRIVE_FORWARD"; break;
-      						case 4: cmdType = "TURN"; break;
+      						case 1: {
+      							cmdType = "DRIVE_FOR_DURATION";
+      							auto driveCmd = DriveForDurationCommand::decode(command);
+      							rxData.speed = driveCmd.getSpeedPercent();
+      							rxData.duration = driveCmd.getDurationSeconds();
+      							break;
+      						}
+      						case 2: {
+      							cmdType = "TURN_FOR_DURATION";
+      							auto turnCmd = TurnForDurationCommand::decode(command);
+      							rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      							rxData.duration = turnCmd.getDurationSeconds();
+      							break;
+      						}
+      						case 3: {
+      							cmdType = "DRIVE_FORWARD";
+      							auto driveCmd = DriveForwardCommand::decode(command);
+      							rxData.speed = driveCmd.getSpeedPercent();
+      							break;
+      						}
+      						case 4: {
+      							cmdType = "TURN";
+      							auto turnCmd = TurnCommand::decode(command);
+      							rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      							break;
+      						}
       						case 5: cmdType = "STOP"; break;
       						default: cmdType = "RESERVED"; break;
       					}
       					rxData.command = cmdType;
-      					
-      					// Extract parameters (simplified - you may want to use the protocol's decode methods)
-      					if (command != 0) {  // Not a reset command
-      						rxData.speed = ((command >> 3) & 0x1F) * 100.0f / 31.0f;  // Speed percentage
-      						if ((command & 0x7) == 2 || (command & 0x7) == 4) {  // Turn commands
-      							rxData.turnSpeed = rxData.speed;  // Use speed as turn speed
-      							rxData.speed = 0.0f;
-      						}
-      						if ((command & 0x7) == 1 || (command & 0x7) == 2) {  // Duration commands
-      							rxData.duration = ((command >> 8) & 0xF) * 5.0f;  // Duration in seconds
-      						}
-      					}
 
       					// Play success sound (18.5 kHz) before processing command
       					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
