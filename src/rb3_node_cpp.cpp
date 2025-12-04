@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <stdlib.h>
+#include <cstdlib>
 #include <optional>
 #include <termios.h>
 #include <unistd.h>
@@ -78,9 +79,18 @@ class RB3_cpp_publisher : public rclcpp::Node{
       auto time_t_now = std::chrono::system_clock::to_time_t(now);
       std::tm* tm_now = std::localtime(&time_t_now);
       std::ostringstream logFileName;
-      logFileName << "../TEST_RESULTS/turtlebot_log_"
-                  << std::put_time(tm_now, "%Y%m%d_%H%M%S")
-                  << ".txt";
+      // Get home directory from environment variable for portability
+      const char* homeDir = std::getenv("HOME");
+      if (homeDir != nullptr) {
+        logFileName << homeDir << "/code_ws/src/rb3_package_cpp/temp_repo/TEST_RESULTS/turtlebot_log_"
+                    << std::put_time(tm_now, "%Y%m%d_%H%M%S")
+                    << ".txt";
+      } else {
+        // Fallback to current directory if HOME is not set
+        logFileName << "turtlebot_log_"
+                    << std::put_time(tm_now, "%Y%m%d_%H%M%S")
+                    << ".txt";
+      }
       
       RCLCPP_INFO(this->get_logger(), "Dumping database to %s...", logFileName.str().c_str());
       if (db_->dumpToLog(logFileName.str())) {
