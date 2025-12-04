@@ -65,9 +65,9 @@ bool Database::createTables() {
         "tone2 REAL,"
         "tone3 REAL,"
         "tone4 REAL,"
-        "commandEncoded TEXT,"
+        "commandBitEncoded INTEGER,"
         "crc INTEGER,"
-        "commandDecoded TEXT,"
+        "commandBitDecoded INTEGER,"
         "command TEXT,"
         "speed REAL,"
         "turnSpeed REAL,"
@@ -138,9 +138,9 @@ bool Database::insertReceived(int64_t timeStamp,
                         float tone2,
                         float tone3,
                         float tone4,
-                        const std::string& commandEncoded,
+                        uint16_t commandBitEncoded,
                         bool crc,
-                        const std::string& commandDecoded,
+                        uint16_t commandBitDecoded,
                         const std::string& command,
                         float speed,
                         float turnSpeed,
@@ -150,9 +150,9 @@ bool Database::insertReceived(int64_t timeStamp,
     sqlite3_stmt* stmt;
     std::string sql =
         "INSERT INTO ReceivedData (timeStamp, tone1, tone2, tone3, tone4, "
-        "commandEncoded, crc, commandDecoded, command, "
+        "commandBitEncoded, crc, commandBitDecoded, command, "
         "speed, turnSpeed, duration, intConfirmationSen) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";;
     
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "Failed to prepare ReceivedData statement: " << sqlite3_errmsg(db) << "\n";
@@ -165,9 +165,9 @@ bool Database::insertReceived(int64_t timeStamp,
     sqlite3_bind_double(stmt, 3, tone2);
     sqlite3_bind_double(stmt, 4, tone3);
     sqlite3_bind_double(stmt, 5, tone4);
-    sqlite3_bind_text(stmt, 6, commandEncoded.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 6, commandBitEncoded);
     sqlite3_bind_int(stmt, 7, crc ? 1 : 0);
-    sqlite3_bind_text(stmt, 8, commandDecoded.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 8, commandBitDecoded);
     sqlite3_bind_text(stmt, 9, command.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_double(stmt, 10, speed);
     sqlite3_bind_double(stmt, 11, turnSpeed);
