@@ -48,9 +48,8 @@ bool Database::createTables() {
         "speed REAL,"
         "turnSpeed REAL,"
         "duration REAL,"
-        "commandBitRaw TEXT,"
-        "commandBitDecoded TEXT,"
-        "commandBitEncoded TEXT,"
+        "commandBitDecoded INTEGER,"
+        "commandBitEncoded INTEGER,"
         "tone1 REAL,"
         "tone2 REAL,"
         "tone3 REAL,"
@@ -86,9 +85,8 @@ bool Database::insertSent(int64_t startTimeStamp,
                         float speed,
                         float turnSpeed,
                         float duration,
-                        const std::string& commandBitRaw,
-                        const std::string& commandBitDecoded,
-                        const std::string& commandBitEncoded,
+                        uint16_t commandBitDecoded,
+                        uint16_t commandBitEncoded,
                         float tone1,
                         float tone2,
                         float tone3,
@@ -98,9 +96,9 @@ bool Database::insertSent(int64_t startTimeStamp,
     sqlite3_stmt* stmt;
     std::string sql =
         "INSERT INTO SentData (startTimeStamp, endTimeStamp, command, speed, turnSpeed, duration, "
-        "commandBitRaw, commandBitDecoded, commandBitEncoded, "
+        "commandBitDecoded, commandBitEncoded, "
         "tone1, tone2, tone3, tone4, intConfirmationRec) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";;
     
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "Failed to prepare SentData statement: " << sqlite3_errmsg(db) << "\n";
@@ -114,14 +112,13 @@ bool Database::insertSent(int64_t startTimeStamp,
     sqlite3_bind_double(stmt, 4, speed);
     sqlite3_bind_double(stmt, 5, turnSpeed);
     sqlite3_bind_double(stmt, 6, duration);
-    sqlite3_bind_text(stmt, 7, commandBitRaw.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 8, commandBitDecoded.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 9, commandBitEncoded.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_double(stmt, 10, tone1);
-    sqlite3_bind_double(stmt, 11, tone2);
-    sqlite3_bind_double(stmt, 12, tone3);
-    sqlite3_bind_double(stmt, 13, tone4);
-    sqlite3_bind_int(stmt, 14, intConfirmationRec);
+    sqlite3_bind_int(stmt, 7, commandBitDecoded);
+    sqlite3_bind_int(stmt, 8, commandBitEncoded);
+    sqlite3_bind_double(stmt, 9, tone1);
+    sqlite3_bind_double(stmt, 10, tone2);
+    sqlite3_bind_double(stmt, 11, tone3);
+    sqlite3_bind_double(stmt, 12, tone4);
+    sqlite3_bind_int(stmt, 13, intConfirmationRec);
     
     // Execute
     int result = sqlite3_step(stmt);

@@ -24,6 +24,63 @@ std::string getCurrentTimestamp() {
     return ss.str();
 }
 
+void logSentData(Database& db,
+                 const std::string& command,
+                 float speed,
+                 float turnSpeed,
+                 float duration,
+                 const std::string& commandBitRaw,
+                 const std::string& commandBitDecoded,
+                 const std::string& commandBitEncoded,
+                 float tone1,
+                 float tone2,
+                 float tone3,
+                 float tone4,
+                 int intConfirmationRec)
+{
+    int64_t startTime = getCurrentTimestampMs();
+    int64_t endTime = 0; // Will be updated when confirmation is received
+    
+    if (!db.insertSent(startTime, endTime, command, speed, turnSpeed, duration,
+                       commandBitRaw, commandBitDecoded, commandBitEncoded,
+                       tone1, tone2, tone3, tone4, intConfirmationRec))
+    {
+        std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
+    } else {
+        std::cout << "[LOGGER] SentData logged - Command: " << command 
+                  << ", Timestamp: " << startTime << "\n";
+    }
+}
+
+void logReceivedData(Database& db,
+                     float tone1,
+                     float tone2,
+                     float tone3,
+                     float tone4,
+                     const std::string& commandEncoded,
+                     bool crc,
+                     const std::string& commandDecoded,
+                     const std::string& command,
+                     float speed,
+                     float turnSpeed,
+                     float duration,
+                     int intConfirmationSen)
+{
+    int64_t timeStamp = getCurrentTimestampMs();
+    
+    if (!db.insertReceived(timeStamp, tone1, tone2, tone3, tone4,
+                          commandEncoded, crc, commandDecoded, command,
+                          speed, turnSpeed, duration, intConfirmationSen))
+    {
+        std::cerr << "[LOGGER] Failed to insert ReceivedData at timestamp " << timeStamp << "\n";
+    } else {
+        std::cout << "[LOGGER] ReceivedData logged - Command: " << command 
+                  << ", CRC Valid: " << (crc ? "Yes" : "No")
+                  << ", Timestamp: " << timeStamp << "\n";
+    }
+}
+
+// Backwards compatibility wrapper
 void logPCData(Database& db,
                const std::string& command,
                float speed,
@@ -38,19 +95,12 @@ void logPCData(Database& db,
                float tone4,
                int intConfirmationRec)
 {
-    int64_t startTime = getCurrentTimestampMs();
-    int64_t endTime = 0; // Will be updated when confirmation is received
-    
-    if (!db.insertSent(startTime, endTime, command, speed, turnSpeed, duration,
-                       commandBitRaw, commandBitDecoded, commandBitEncoded,
-                       tone1, tone2, tone3, tone4, intConfirmationRec))
-    {
-        std::cerr << "[LOGGER] Failed to insert SentData at timestamp " << startTime << "\n";
-    } else {
-        std::cout << "[LOGGER] SentData logged at timestamp " << startTime << "\n";
-    }
+    logSentData(db, command, speed, turnSpeed, duration,
+                commandBitRaw, commandBitDecoded, commandBitEncoded,
+                tone1, tone2, tone3, tone4, intConfirmationRec);
 }
 
+// Backwards compatibility wrapper
 void logPIData(Database& db,
                float tone1,
                float tone2,
@@ -65,14 +115,7 @@ void logPIData(Database& db,
                float duration,
                int intConfirmationSen)
 {
-    int64_t timeStamp = getCurrentTimestampMs();
-    
-    if (!db.insertReceived(timeStamp, tone1, tone2, tone3, tone4,
-                          commandEncoded, crc, commandDecoded, command,
-                          speed, turnSpeed, duration, intConfirmationSen))
-    {
-        std::cerr << "[LOGGER] Failed to insert ReceivedData at timestamp " << timeStamp << "\n";
-    } else {
-        std::cout << "[LOGGER] ReceivedData logged at timestamp " << timeStamp << "\n";
-    }
+    logReceivedData(db, tone1, tone2, tone3, tone4,
+                    commandEncoded, crc, commandDecoded, command,
+                    speed, turnSpeed, duration, intConfirmationSen);
 }
