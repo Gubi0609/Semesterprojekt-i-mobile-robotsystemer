@@ -250,34 +250,71 @@ bool Database::dumpToLog(const std::string& logFileName) {
     logFile << std::string(80, '-') << "\n";
 
     sqlite3_stmt* stmt;
-    std::string sql = "SELECT id, startTimeStamp, endTimeStamp, responseTime, command, speed, turnSpeed, duration, "
-                      "commandBitDecoded, commandBitEncoded, tone1, tone2, tone3, tone4, confirmationType "
-                      "FROM SentData ORDER BY id;";
+
+    // Check if responseTime column exists
+    bool hasResponseTimeCol = false;
+    std::string checkSql = "PRAGMA table_info(SentData);";
+    if (sqlite3_prepare_v2(db, checkSql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            const char* colName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            if (colName && std::string(colName) == "responseTime") {
+                hasResponseTimeCol = true;
+                break;
+            }
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    std::string sql;
+    if (hasResponseTimeCol) {
+        sql = "SELECT id, startTimeStamp, endTimeStamp, responseTime, command, speed, turnSpeed, duration, "
+              "commandBitDecoded, commandBitEncoded, tone1, tone2, tone3, tone4, confirmationType "
+              "FROM SentData ORDER BY id;";
+    } else {
+        sql = "SELECT id, startTimeStamp, endTimeStamp, command, speed, turnSpeed, duration, "
+              "commandBitDecoded, commandBitEncoded, tone1, tone2, tone3, tone4, confirmationType "
+              "FROM SentData ORDER BY id;";
+    }
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         int count = 0;
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             count++;
-            int id = sqlite3_column_int(stmt, 0);
-            int64_t startTs = sqlite3_column_int64(stmt, 1);
-            int64_t endTs = sqlite3_column_int64(stmt, 2);
-            int64_t respTime = sqlite3_column_int64(stmt, 3);
-            bool respTimeNull = (sqlite3_column_type(stmt, 3) == SQLITE_NULL);
-            const char* cmd = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-            double speed = sqlite3_column_double(stmt, 5);
-            double turnSpeed = sqlite3_column_double(stmt, 6);
-            double duration = sqlite3_column_double(stmt, 7);
-            int cmdDecoded = sqlite3_column_int(stmt, 8);
-            int cmdEncoded = sqlite3_column_int(stmt, 9);
-            double t1 = sqlite3_column_double(stmt, 10);
-            double t2 = sqlite3_column_double(stmt, 11);
-            double t3 = sqlite3_column_double(stmt, 12);
-            double t4 = sqlite3_column_double(stmt, 13);
+            int col = 0;
+            int id = sqlite3_column_int(stmt, col++);
+            int64_t startTs = sqlite3_column_int64(stmt, col++);
+            int64_t endTs = sqlite3_column_int64(stmt, col++);
+
+            int64_t respTime = 0;
+            bool respTimeNull = true;
+            if (hasResponseTimeCol) {
+                respTimeNull = (sqlite3_column_type(stmt, col) == SQLITE_NULL);
+                respTime = sqlite3_column_int64(stmt, col++);
+            }
+
+            const char* cmd = reinterpret_cast<const char*>(sqlite3_column_text(stmt, col++));
+            double speed = sqlite3_column_double(stmt, col++);
+            double turnSpeed = sqlite3_column_double(stmt, col++);
+            double duration = sqlite3_column_double(stmt, col++);
+            int cmdDecoded = sqlite3_column_int(stmt, col++);
+            int cmdEncoded = sqlite3_column_int(stmt, col++);
+            double t1 = sqlite3_column_double(stmt, col++);
+            double t2 = sqlite3_column_double(stmt, col++);
+            double t3 = sqlite3_column_double(stmt, col++);
+            double t4 = sqlite3_column_double(stmt, col++);
+            int confTypeCol = col++;
 
             logFile << "Entry #" << id << "\n";
             logFile << "  Command: " << (cmd ? cmd : "NULL") << "\n";
             logFile << "  Start Time: " << formatTimestamp(startTs) << "\n";
             logFile << "  End Time: " << formatTimestamp(endTs) << "\n";
+
+            // Calculate response time from timestamps if not stored
+            if (!hasResponseTimeCol && endTs > 0 && startTs > 0) {
+                respTime = endTs - startTs;
+                respTimeNull = false;
+            }
+
             if (!respTimeNull && respTime > 0) {
                 logFile << "  Response Time: " << respTime << " ms\n";
             } else {
@@ -289,10 +326,10 @@ bool Database::dumpToLog(const std::string& logFileName) {
             logFile << "  Tones: " << std::fixed << std::setprecision(1)
                     << t1 << " Hz, " << t2 << " Hz, " << t3 << " Hz, " << t4 << " Hz\n";
 
-            if (sqlite3_column_type(stmt, 14) == SQLITE_NULL) {
+            if (sqlite3_column_type(stmt, confTypeCol) == SQLITE_NULL) {
                 logFile << "  Confirmation: No response\n";
             } else {
-                int confType = sqlite3_column_int(stmt, 14);
+                int confType = sqlite3_column_int(stmt, confTypeCol);
                 logFile << "  Confirmation: " << (confType == 1 ? "Positive" : (confType == 2 ? "Negative" : "Unknown")) << "\n";
             }
             logFile << std::string(80, '-') << "\n";

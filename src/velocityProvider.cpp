@@ -1,24 +1,10 @@
 #include "velocityProvider.hpp"
-#include "../INCLUDE/Database.h"
 #include <cstdlib>
 #include <algorithm> // for std::clamp
 
-// Helper to get current timestamp in milliseconds
-static int64_t getTimestampMs() {
-    auto now = std::chrono::system_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()).count();
-    return ms;
-}
-
 VelocityProvider::VelocityProvider()
-: linear_x_(0.0f), angular_z_(0.0f), state_(State::IDLE), durationVelocity(0.0f), db_(nullptr)
+: linear_x_(0.0f), angular_z_(0.0f), state_(State::IDLE), durationVelocity(0.0f)
 {}
-
-void VelocityProvider::setDatabase(Database* db) {
-    std::lock_guard<std::recursive_mutex> lk(remu_);
-    db_ = db;
-}
 
 float VelocityProvider::getVel() {
 	//use recursive mutex instead to avoid deadlock, but still be able to use mutex in all methods
@@ -110,13 +96,6 @@ void VelocityProvider::forwardForDuration(float seconds, float linear){
 	setVel(linear);
 	customDuration = seconds;
 	updateDurationValues = true;
-
-	// Log to database if available
-	if (db_) {
-		db_->insertReceived(getTimestampMs(), 0.0f, 0.0f, 0.0f, 0.0f,
-			0, true, 0, "DRIVE_FOR_DURATION",
-			linear, 0.0f, seconds, 1);
-	}
 }
 
 void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
@@ -127,13 +106,6 @@ void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
 	setVel(adjustedLin);
 	setRot(adjustedRot);
 	updateDurationValues = true;
-
-	// Log to database if available
-	if (db_) {
-		db_->insertReceived(getTimestampMs(), 0.0f, 0.0f, 0.0f, 0.0f,
-			0, true, 0, "DRIVE_FOR_DURATION",
-			adjustedLin, adjustedRot, seconds, 1);
-	}
 }
 
 void VelocityProvider::driveContinuous(float lin){
@@ -142,13 +114,6 @@ void VelocityProvider::driveContinuous(float lin){
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin,0.0f);
 	setVel(adjustedLin);
 	setRot(adjustedRot);
-
-	// Log to database if available
-	if (db_) {
-		db_->insertReceived(getTimestampMs(), 0.0f, 0.0f, 0.0f, 0.0f,
-			0, true, 0, "DRIVE_FORWARD",
-			adjustedLin, 0.0f, 0.0f, 1);
-	}
 }
 
 void VelocityProvider::turnContinuous(float rot){
@@ -157,13 +122,6 @@ void VelocityProvider::turnContinuous(float rot){
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(0.0f, rot);
 	setVel(adjustedLin);
 	setRot(adjustedRot);
-
-	// Log to database if available
-	if (db_) {
-		db_->insertReceived(getTimestampMs(), 0.0f, 0.0f, 0.0f, 0.0f,
-			0, true, 0, "TURN",
-			0.0f, adjustedRot, 0.0f, 1);
-	}
 }
 
 std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
@@ -183,13 +141,6 @@ void VelocityProvider::turnForDuration(float seconds, float rotational){
 	setRot(rotational);
 	customDuration = seconds;
 	updateDurationValues = true;
-
-	// Log to database if available
-	if (db_) {
-		db_->insertReceived(getTimestampMs(), 0.0f, 0.0f, 0.0f, 0.0f,
-			0, true, 0, "TURN_FOR_DURATION",
-			0.0f, rotational, seconds, 1);
-	}
 }
 
 void VelocityProvider::setEnableDriving(bool b) {
