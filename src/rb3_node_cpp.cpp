@@ -233,7 +233,7 @@ FrequencyDetector::Config detConfig;
 // FAST MODE settings (Mode 2): 4096 FFT @ 20Hz - optimized for Pi
 detConfig.sampleRate = 48000;
 detConfig.fftSize = 4096;           // CHANGED: 4096 for speed (was 16384)
-detConfig.numPeaks = 10;            // Look for up to 10 peaks
+detConfig.numPeaks = 20;            // Look for up to 20 peaks (increased for noisy environments)
 detConfig.duration = 0.0;           // Continuous
 detConfig.bandpassLow = 0.0;        // DISABLED: No bandpass filtering (was 4000.0)
 detConfig.bandpassHigh = 0.0;       // DISABLED: No bandpass filtering (was 17000.0)
