@@ -248,7 +248,7 @@ const double consistencyWindow = 0.3;
       uint16_t lastValue = 0;
       std::chrono::steady_clock::time_point lastTimestamp = std::chrono::steady_clock::now();
       std::chrono::steady_clock::time_point lastActivityTime = std::chrono::steady_clock::now();
-      const double LOCKOUT_PERIOD = 0.8;
+      const double LOCKOUT_PERIOD = 1.0;  // 1 second lockout for duplicate commands
       const double RESTART_INTERVAL = 30.0;  // Restart mic if idle for 30 seconds
 
       // Structure to collect data for database logging
@@ -393,13 +393,12 @@ const double consistencyWindow = 0.3;
       								rxData.duration, rxData.confirmationSent);
       						}
       						
-      						// Play failure sound (19.5 kHz)
+      						// Play failure sound
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
       						}).detach();
       						chordCandidates.erase(decodedValue);
-      						lastValue = decodedValue;
-      						lastTimestamp = now;
+      						// Don't update lastValue/lastTimestamp for failed CRC
       						return;
       					}
 
@@ -434,13 +433,12 @@ const double consistencyWindow = 0.3;
       								rxData.duration, rxData.confirmationSent);
       						}
       						
-      						// Play failure sound (19.5 kHz)
+      						// Play failure sound
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
       						}).detach();
       						chordCandidates.erase(decodedValue);
-      						lastValue = decodedValue;
-      						lastTimestamp = now;
+      						// Don't update lastValue/lastTimestamp for failed decode
       						return;
       					}
 
