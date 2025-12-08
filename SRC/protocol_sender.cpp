@@ -174,10 +174,10 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 		transmitter.waitForCompletion();
 
 		if (waitForFeedback) {
-			// Wait additional 0.4s for feedback (0.15s tone + 0.25s grace period)
+			// Wait additional 0.6s for feedback (0.4s tone + 0.2s grace period)
 			std::cout << "Waiting for feedback...\n";
 			auto startWait = std::chrono::steady_clock::now();
-			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.4) {
+			while (std::chrono::duration<double>(std::chrono::steady_clock::now() - startWait).count() < 0.6) {
 				if (feedbackReceived.load()) {
 					success = true;
 					break;
