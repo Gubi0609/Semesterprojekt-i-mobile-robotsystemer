@@ -310,7 +310,7 @@ void runStateMachineUI(AudioComm::ChordTransmitter& transmitter, CRC& crc, Datab
 				selectedMode = RobotMode::STOP;
 				nextState = RobotState::STOP_MODE;
 			} else {
-				std::cout << "❌ Invalid choice.\n";
+				std::cout << "Invalid choice.\n";
 				validChoice = false;
 			}
 

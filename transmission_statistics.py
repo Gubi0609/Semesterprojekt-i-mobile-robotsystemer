@@ -548,7 +548,7 @@ def generate_csv_output(stats: dict, title: str) -> str:
 def main():
     # Default paths
     script_dir = Path(__file__).parent
-    protocol_db = script_dir / "BUILD" / "protocol_communication.db"
+    protocol_db = script_dir / "TEST_RESULTS" / "protocol_communication.db"
     turtlebot_db = script_dir / "TEST_RESULTS" / "turtlebot_communication.db"
 
     # Parse arguments
