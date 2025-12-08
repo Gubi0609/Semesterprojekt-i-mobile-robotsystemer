@@ -214,7 +214,7 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 
 	if (!success && waitForFeedback) {
 		std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-		std::cout << "║  TRANSMISSION CONFIRMATION FAILED                  																			  ║\n";
+		std::cout << "║  TRANSMISSION CONFIRMATION FAILED\n";
 		std::cout << "╚════════════════════════════════════════════════════════╝\n";
 		std::cout << "No feedback received after " << maxAttempts << " attempts.\n\n";
 		std::cout << "Options:\n";
@@ -297,7 +297,7 @@ int main() {
 	}
 
 	std::cout << "╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║  Command Sender starting...																											            ║\n";
+	std::cout << "║  Command Sender starting...				\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
 	std::cout << "Audio transmitter ready.\n";
 

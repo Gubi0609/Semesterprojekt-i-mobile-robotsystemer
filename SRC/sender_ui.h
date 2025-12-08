@@ -41,7 +41,7 @@ std::string stateToString(RobotState state) {
 
 void printModeSelectMenu() {
 	std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║               SELECT ROBOT MODE    																						       	                  ║\n";
+	std::cout << "║               SELECT ROBOT MODE    	\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n";
 	std::cout << "\n  1. Drive for Duration\n";
 	std::cout << "  2. Turn for Duration\n";
@@ -55,7 +55,7 @@ void printModeSelectMenu() {
 
 void printInModeMenu(RobotState state) {
 	std::cout << "\n╔════════════════════════════════════════════════════════╗\n";
-	std::cout << "║  Current Mode: " << std::left << std::setfill(' ') << std::setw(37) << stateToString(state) << std::setfill('0') << "║\n";
+	std::cout << "║  Current Mode: " << std::left << std::setfill(' ') << std::setw(37) << stateToString(state) << std::setfill('0') << "\n";
 	std::cout << "╚════════════════════════════════════════════════════════╝\n";
 	std::cout << "\n  C. Send Command (for this mode)\n";
 	std::cout << "  S. Send STOP\n";
