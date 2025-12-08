@@ -1,0 +1,107 @@
+================================================================================
+Protocol Communication Database Log
+Generated: Thu Dec  4 12:35:39 2025
+Database file: protocol_communication.db
+================================================================================
+
+=== SENT DATA ===
+--------------------------------------------------------------------------------
+Entry #1
+  Command: RESET
+  Start Time: 2025-12-04 12:19:40.640
+  End Time: 2025-12-04 12:19:42.029
+  Response Time: 1389 ms
+  Speed: 0, Turn Speed: 0, Duration: 0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #2
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-04 12:19:42.032
+  End Time: 2025-12-04 12:19:42.912
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #3
+  Command: Drive 2.000000s at 50%
+  Start Time: 2025-12-04 12:19:57.513
+  End Time: 2025-12-04 12:19:58.589
+  Response Time: 1076 ms
+  Speed: 50.0, Turn Speed: 0.0, Duration: 2.0
+  Command Bits - Decoded: 0x420, Encoded: 0x4203
+  Tones: 5166.7 Hz, 7833.3 Hz, 10500.0 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #4
+  Command: RESET
+  Start Time: 2025-12-04 12:20:02.260
+  End Time: 2025-12-04 12:20:03.139
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #5
+  Command: RESET
+  Start Time: 2025-12-04 12:20:05.332
+  End Time: 2025-12-04 12:20:06.207
+  Response Time: 875 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #6
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-04 12:20:06.229
+  End Time: 2025-12-04 12:20:07.106
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #7
+  Command: RESET
+  Start Time: 2025-12-04 12:35:30.604
+  End Time: 2025-12-04 12:35:31.484
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #8
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-04 12:35:31.506
+  End Time: 2025-12-04 12:35:32.384
+  Response Time: 878 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #9
+  Command: Drive 2.000000s at 50%
+  Start Time: 2025-12-04 12:35:36.622
+  End Time: 2025-12-04 12:35:37.501
+  Response Time: 879 ms
+  Speed: 50.0, Turn Speed: 0.0, Duration: 2.0
+  Command Bits - Decoded: 0x420, Encoded: 0x4203
+  Tones: 5166.7 Hz, 7833.3 Hz, 10500.0 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Total sent entries: 9
+
+=== RECEIVED DATA ===
+--------------------------------------------------------------------------------
+Total received entries: 0
+
+================================================================================
+End of log
+================================================================================

@@ -10,22 +10,26 @@ public:
     bool open();
     void close();
     bool createTables();
+
+    // Dump database contents to a log file
+    bool dumpToLog(const std::string& logFileName);
     
     // Insert a record into the SentData table
     bool insertSent(int64_t startTimeStamp,
                     int64_t endTimeStamp,
+                    int64_t responseTime,
                     const std::string& command,
                   float speed,
                   float turnSpeed,
                   float duration,
-                  const std::string& commandBitRaw,
-                  const std::string& commandBitDecoded,
-                  const std::string& commandBitEncoded,
+                  uint16_t commandBitDecoded,
+                  uint16_t commandBitEncoded,
                   float tone1,
                   float tone2,
                   float tone3,
                   float tone4,
-                  int intConfirmationRec);
+                  bool hasConfirmation,
+                  int confirmationType);
     
     // Insert a record into the ReceivedData table
     bool insertReceived(int64_t timeStamp,
@@ -33,9 +37,9 @@ public:
                   float tone2,
                   float tone3,
                   float tone4,
-                  const std::string& commandEncoded,
+                  uint16_t commandBitEncoded,
                   bool crc,
-                  const std::string& commandDecoded,
+                  uint16_t commandBitDecoded,
                   const std::string& command,
                   float speed,
                   float turnSpeed,

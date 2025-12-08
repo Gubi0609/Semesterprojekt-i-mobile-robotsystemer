@@ -1,5 +1,5 @@
-#include "../../LIB/tone_generator.h"
-#include "../../LIB/frequency_detector.h"
+#include "../LIB/tone_generator.h"
+#include "../LIB/frequency_detector.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>

@@ -3,10 +3,13 @@
 #include <string>
 #include <chrono>
 #include <stdlib.h>
+#include <cstdlib>
 #include <optional>
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <iomanip>
+#include <sstream>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
@@ -18,10 +21,21 @@
 #include "../LIB/tone_generator.h"
 #include "../INCLUDE/CRC.h"
 #include "../INCLUDE/command_protocol.h"
+#include "../INCLUDE/Database.h"
+#include "../INCLUDE/Database.h"
+#include "../INCLUDE/Logger.h"
 
 #include "velocityProvider.hpp"   // <-- new
 using namespace std;
 using namespace std::chrono_literals; // for 1000ms
+
+// Helper function to get current timestamp in milliseconds
+int64_t getCurrentTimestampMs() {
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    return ms;
+}
 
 class RB3_cpp_publisher : public rclcpp::Node{
   public:
@@ -31,6 +45,18 @@ class RB3_cpp_publisher : public rclcpp::Node{
       RCLCPP_INFO(this->get_logger(), "Node started successfully!");
       publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("cmd_vel",10);
       timer_ = this->create_wall_timer(100ms, std::bind(&RB3_cpp_publisher::publish_vel, this));  // CHANGED: 1000ms -> 100ms (10Hz)
+    
+      // Initialize database for Pi reception logging
+      db_ = std::make_unique<Database>("turtlebot_communication.db");
+      if (!db_->open()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open database. Continuing without logging...");
+        db_.reset();
+      } else if (!db_->createTables()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to create database tables. Continuing without logging...");
+        db_.reset();
+      } else {
+        RCLCPP_INFO(this->get_logger(), "Database initialized: turtlebot_communication.db");
+      }
     
 
   	//start the protocol receiver thread if provider present
@@ -42,13 +68,39 @@ class RB3_cpp_publisher : public rclcpp::Node{
 
   //stop the thread cleanly
   ~RB3_cpp_publisher() override{
-  	receiver_running_.store(false);
-  	keyboard_running_.store(false);
-  	if (receiver_thread_.joinable()) receiver_thread_.join();
-  	if (keyboard_thread_.joinable()) keyboard_thread_.join();
-  }
-
-  private:
+    receiver_running_.store(false);
+    keyboard_running_.store(false);
+    if (receiver_thread_.joinable()) receiver_thread_.join();
+    if (keyboard_thread_.joinable()) keyboard_thread_.join();
+    
+    // Dump database to TEST_RESULTS before shutdown
+    if (db_) {
+      auto now = std::chrono::system_clock::now();
+      auto time_t_now = std::chrono::system_clock::to_time_t(now);
+      std::tm* tm_now = std::localtime(&time_t_now);
+      std::ostringstream logFileName;
+      // Get home directory from environment variable for portability
+      const char* homeDir = std::getenv("HOME");
+      if (homeDir != nullptr) {
+        logFileName << homeDir << "/code_ws/src/rb3_package_cpp/temp_repo/TEST_RESULTS/turtlebot_log_"
+                    << std::put_time(tm_now, "%Y%m%d_%H%M%S")
+                    << ".txt";
+      } else {
+        // Fallback to current directory if HOME is not set
+        logFileName << "turtlebot_log_"
+                    << std::put_time(tm_now, "%Y%m%d_%H%M%S")
+                    << ".txt";
+      }
+      
+      RCLCPP_INFO(this->get_logger(), "Dumping database to %s...", logFileName.str().c_str());
+      if (db_->dumpToLog(logFileName.str())) {
+        RCLCPP_INFO(this->get_logger(), "Database log saved successfully.");
+      } else {
+        RCLCPP_ERROR(this->get_logger(), "Failed to save database log.");
+      }
+      db_->close();
+    }
+  }  private:
   void publish_vel(){
     msg.header.stamp = this->get_clock()->now();
     msg.header.frame_id = "base_link";
@@ -119,7 +171,7 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	float speed = cmd.getSpeedPercent();
       	RCLCPP_INFO(this->get_logger(), "DRIVE command: %.1fs at %.0f%% speed", d, speed);
       	//drive forward for duration (speed expected in percent 0..100)
-      	provider->driveForDuration(static_cast<float>(d), speed, 0.0f);
+      	provider->forwardForDuration(static_cast<float>(d), speed);
       });
 
       protocol.setTurnForDurationCallback([this, provider](const TurnForDurationCommand& cmd){
@@ -137,6 +189,20 @@ class RB3_cpp_publisher : public rclcpp::Node{
       	provider->setRot(0.0f);
       	provider->setState(VelocityProvider::State::IDLE);
       });
+
+    protocol.setDriveForwardCallback([this, provider](const DriveForwardCommand& cmd){
+  			if(!provider) return;
+  			float speed = cmd.getSpeedPercent();
+  			RCLCPP_INFO(this->get_logger(), "DRIVE CONTINUOUS command: %.0f%% speed", speed);
+  			provider->driveContinuous(speed);
+  		});
+
+  		protocol.setTurnCallback([this, provider](const TurnCommand& cmd){
+  			if(!provider) return;
+  			float turn = cmd.getTurnRatePercent();
+  			RCLCPP_INFO(this->get_logger(), "TURN CONTINUOUS command: %.0f%% turn rate", turn);
+  			provider->turnContinuous(turn);
+  		});
 
   // Create decoder for chord analysis
 AudioComm::ChordConfig chordConfig;
@@ -184,6 +250,20 @@ const double consistencyWindow = 0.3;
       std::chrono::steady_clock::time_point lastActivityTime = std::chrono::steady_clock::now();
       const double LOCKOUT_PERIOD = 0.8;
       const double RESTART_INTERVAL = 30.0;  // Restart mic if idle for 30 seconds
+
+      // Structure to collect data for database logging
+      struct ReceptionData {
+        int64_t timestamp = 0;
+        float tone1 = 0.0f, tone2 = 0.0f, tone3 = 0.0f, tone4 = 0.0f;
+        uint16_t commandBitEncoded = 0;
+        bool crcValid = false;
+        uint16_t commandBitDecoded = 0;
+        std::string command = "";
+        float speed = 0.0f;
+        float turnSpeed = 0.0f;
+        float duration = 0.0f;
+        int confirmationSent = 0;  // 1 = positive, 2 = negative, 0 = none
+      };
 
       // Calculate frequency resolution
       double freqResolution = 48000.0 / detConfig.fftSize;
@@ -288,6 +368,31 @@ const double consistencyWindow = 0.3;
       					// Verify CRC
       					if(!crc.verify(chordValue)){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "CRC failed for 0x%04X", chordValue);
+      						
+      						// Log rejected data to database
+      						if (this->db_) {
+      							ReceptionData rxData;
+      							rxData.timestamp = getCurrentTimestampMs();
+      							for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
+      								switch(i) {
+      									case 0: rxData.tone1 = detectedFreqs[i]; break;
+      									case 1: rxData.tone2 = detectedFreqs[i]; break;
+      									case 2: rxData.tone3 = detectedFreqs[i]; break;
+      									case 3: rxData.tone4 = detectedFreqs[i]; break;
+      								}
+      							}
+      							rxData.commandBitEncoded = chordValue;
+      							rxData.crcValid = false;
+      							rxData.commandBitDecoded = 0;  // No valid decode
+      							rxData.command = "CRC_FAILED";
+      							rxData.confirmationSent = 2;  // Negative confirmation
+      							
+      							this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2, 
+      								rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
+      								rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
+      								rxData.duration, rxData.confirmationSent);
+      						}
+      						
       						// Play failure sound (19.5 kHz)
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
@@ -304,6 +409,31 @@ const double consistencyWindow = 0.3;
       					auto decoded = crc.decode1612(chordValue);
       					if(!decoded.has_value()){
       						RCLCPP_WARN(rclcpp::get_logger("rb3_protocol"), "Decode failed for 0x%04X", chordValue);
+      						
+      						// Log rejected data to database
+      						if (this->db_) {
+      							ReceptionData rxData;
+      							rxData.timestamp = getCurrentTimestampMs();
+      							for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
+      								switch(i) {
+      									case 0: rxData.tone1 = detectedFreqs[i]; break;
+      									case 1: rxData.tone2 = detectedFreqs[i]; break;
+      									case 2: rxData.tone3 = detectedFreqs[i]; break;
+      									case 3: rxData.tone4 = detectedFreqs[i]; break;
+      								}
+      							}
+      							rxData.commandBitEncoded = chordValue;
+      							rxData.crcValid = true;  // CRC passed but decode failed
+      							rxData.commandBitDecoded = 0;  // No valid decode
+      							rxData.command = "DECODE_FAILED";
+      							rxData.confirmationSent = 2;  // Negative confirmation
+      							
+      							this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2, 
+      								rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
+      								rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
+      								rxData.duration, rxData.confirmationSent);
+      						}
+      						
       						// Play failure sound (19.5 kHz)
       						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
       							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
@@ -318,10 +448,100 @@ const double consistencyWindow = 0.3;
       					validChords++;
       					RCLCPP_INFO(rclcpp::get_logger("rb3_protocol"), "DECODED command: 0x%03X", command);
 
-      					// Play success sound (18.5 kHz) before processing command
+      					// Prepare data for database logging
+      					ReceptionData rxData;
+      					rxData.timestamp = getCurrentTimestampMs();
+      					for (size_t i = 0; i < detectedFreqs.size() && i < 4; ++i) {
+      						switch(i) {
+      							case 0: rxData.tone1 = detectedFreqs[i]; break;
+      							case 1: rxData.tone2 = detectedFreqs[i]; break;
+      							case 2: rxData.tone3 = detectedFreqs[i]; break;
+      							case 3: rxData.tone4 = detectedFreqs[i]; break;
+      						}
+      					}
+      					rxData.commandBitEncoded = chordValue;
+      					rxData.crcValid = true;
+      					rxData.commandBitDecoded = command;
+      					rxData.confirmationSent = 1;  // Positive confirmation
+
+      					// Determine command type based on protocol state machine
+      					std::string cmdType = "UNKNOWN";
+
+      					if (command == RESET_SIGNAL) {
+      						// This is always a RESET command
+      						cmdType = "RESET";
+      					} else if (protocol.isWaitingForModeSelect()) {
+      						// After RESET, this command selects the mode (no parameters yet)
+      						switch (static_cast<RobotMode>(command)) {
+      							case RobotMode::DRIVE_FOR_DURATION:
+      								cmdType = "MODE_DRIVE_FOR_DURATION";
+      								break;
+      							case RobotMode::TURN_FOR_DURATION:
+      								cmdType = "MODE_TURN_FOR_DURATION";
+      								break;
+      							case RobotMode::DRIVE_FORWARD:
+      								cmdType = "MODE_DRIVE_FORWARD";
+      								break;
+      							case RobotMode::TURN:
+      								cmdType = "MODE_TURN";
+      								break;
+      							case RobotMode::STOP:
+      								cmdType = "STOP";
+      								break;
+      							default:
+      								cmdType = "MODE_UNKNOWN";
+      								break;
+      						}
+      						// No speed/duration/turnSpeed for mode selection commands
+      					} else {
+      						// Mode already selected - this command contains parameters
+      						RobotMode currentMode = protocol.getCurrentMode();
+      						switch (currentMode) {
+      							case RobotMode::DRIVE_FOR_DURATION: {
+      								cmdType = "DRIVE_FOR_DURATION_PARAMS";
+      								auto driveCmd = DriveForDurationCommand::decode(command);
+      								rxData.speed = driveCmd.getSpeedPercent();
+      								rxData.duration = driveCmd.getDurationSeconds();
+      								break;
+      							}
+      							case RobotMode::TURN_FOR_DURATION: {
+      								cmdType = "TURN_FOR_DURATION_PARAMS";
+      								auto turnCmd = TurnForDurationCommand::decode(command);
+      								rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      								rxData.duration = turnCmd.getDurationSeconds();
+      								break;
+      							}
+      							case RobotMode::DRIVE_FORWARD: {
+      								cmdType = "DRIVE_FORWARD_PARAMS";
+      								auto driveCmd = DriveForwardCommand::decode(command);
+      								rxData.speed = driveCmd.getSpeedPercent();
+      								break;
+      							}
+      							case RobotMode::TURN: {
+      								cmdType = "TURN_PARAMS";
+      								auto turnCmd = TurnCommand::decode(command);
+      								rxData.turnSpeed = turnCmd.getTurnRatePercent();
+      								break;
+      							}
+      							default:
+      								cmdType = "PARAMS_UNKNOWN";
+      								break;
+      						}
+      					}
+      					rxData.command = cmdType;
+
+      					// Play success sound before processing command
       					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
       						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
       					}).detach();
+
+      					// Log successful reception to database
+      					if (this->db_) {
+      						this->db_->insertReceived(rxData.timestamp, rxData.tone1, rxData.tone2,
+      							rxData.tone3, rxData.tone4, rxData.commandBitEncoded, rxData.crcValid,
+      							rxData.commandBitDecoded, rxData.command, rxData.speed, rxData.turnSpeed,
+      							rxData.duration, rxData.confirmationSent);
+      					}
 
       					protocol.processCommand(command);
 
@@ -479,7 +699,7 @@ const double consistencyWindow = 0.3;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), "🔊 Playing %s tone: %.0f Hz", name, freq);
+				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz", name, freq);
 				// Use system command to avoid PortAudio conflict, timeout for short beep
 				std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)freq) +
 				                  " -c 2 >/dev/null 2>&1 &";
@@ -516,6 +736,7 @@ const double consistencyWindow = 0.3;
 	geometry_msgs::msg::TwistStamped msg;
 
 	std::shared_ptr<VelocityProvider> provider_;
+	std::unique_ptr<Database> db_;  // Database for logging received commands
 
 	std::thread receiver_thread_;
 	std::atomic<bool> receiver_running_{false};

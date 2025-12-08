@@ -1,0 +1,3 @@
+[0.000000] (-) TimerEvent: {}
+[0.002212] (-) JobUnselected: {'identifier': 'AudioCommProtocol'}
+[0.003979] (-) EventReactorShutdown: {}
