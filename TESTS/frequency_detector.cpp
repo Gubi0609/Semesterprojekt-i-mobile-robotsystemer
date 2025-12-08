@@ -394,11 +394,12 @@ private:
 
 // Demo program
 int main(int argc, char** argv) {
+	// Default settings matching rb3_node_cpp.cpp
 	int sampleRate = 48000;
 	int fftSize = 4096;
-	int numPeaks = 5;
-	double lowFreq = 0.0;
-	double highFreq = 0.0;
+	int numPeaks = 10;
+	double lowFreq = 4000.0;    // Bandpass low (matches rb3_node)
+	double highFreq = 17000.0;  // Bandpass high (matches rb3_node)
 
 	// Parse command line arguments
 	for (int i = 1; i < argc; ++i) {
