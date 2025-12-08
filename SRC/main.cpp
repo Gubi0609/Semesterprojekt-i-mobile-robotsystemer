@@ -199,10 +199,7 @@ int main(int argc, char* argv[]) {
     // Wait for transmission to complete
     transmitter.waitForCompletion();
     std::cout << "Transmission complete!\n";
-    
-    // TODO: If you receive confirmation from Pi, update the database record
-    // with intConfirmationRec = true using an UPDATE query
-    
+
     // Close the database
     db.close();
     
