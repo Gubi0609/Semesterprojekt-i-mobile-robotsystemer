@@ -41,6 +41,30 @@ bool Database::execute(const std::string& sql) {
     return true;
 }
 
+// Clear all data from both tables
+bool Database::clearAllData() {
+    if (!db) {
+        std::cerr << "Database not open, cannot clear data\n";
+        return false;
+    }
+
+    bool success = true;
+    success &= execute("DELETE FROM SentData;");
+    success &= execute("DELETE FROM ReceivedData;");
+
+    // Reset auto-increment counters
+    success &= execute("DELETE FROM sqlite_sequence WHERE name='SentData';");
+    success &= execute("DELETE FROM sqlite_sequence WHERE name='ReceivedData';");
+
+    if (success) {
+        std::cout << "Database cleared successfully.\n";
+    } else {
+        std::cerr << "Failed to clear some database tables.\n";
+    }
+
+    return success;
+}
+
 // Create tables
 bool Database::createTables() {
     std::string createSentTable =

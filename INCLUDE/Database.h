@@ -11,6 +11,9 @@ public:
     void close();
     bool createTables();
 
+    // Clear all data from both tables (for fresh test runs)
+    bool clearAllData();
+
     // Dump database contents to a log file
     bool dumpToLog(const std::string& logFileName);
     
