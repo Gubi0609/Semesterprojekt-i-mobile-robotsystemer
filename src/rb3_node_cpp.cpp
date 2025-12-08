@@ -215,17 +215,14 @@ auto feedbackToneGen = std::make_shared<ToneGenerator>();
 // Feedback sound configurations (audible range, avoid protocol bands)
 const double FEEDBACK_SUCCESS_FREQ = 3500.0;  // Success confirmation (3.5 kHz)
 const double FEEDBACK_FAILURE_FREQ = 4000.0;  // Failure/error tone (4.0 kHz) - below protocol range
-const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
-const double FEEDBACK_VOLUME = 1.0;            // Volume scale (1.0 = 100%)
+const double FEEDBACK_DURATION = 0.15;         // 150ms tone duration (original)
 
 // Helper function to play feedback sound - capture all needed variables
 auto playFeedbackSound = [this](double frequency) {
-	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz tone for 400ms", frequency);
+	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz tone", frequency);
 	// Use system beep via speaker-test with timeout (avoids PortAudio conflict)
-	// Increased timeout to 0.4s for better detection by sender
-	// Using -S (scale) for volume control if available, otherwise max volume
-	std::string cmd = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)frequency) +
-	                  " -c 2 -l 1 >/dev/null 2>&1 &";
+	std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)frequency) +
+	                  " -c 2 >/dev/null 2>&1 &";
 	system(cmd.c_str());
 };
 
@@ -558,7 +555,7 @@ const double consistencyWindow = 0.3;
 
       bool started = freqDetector.startAsync(detConfig, fftCallback);
       if(!started){
-      	RCLCPP_ERROR(this->get_logger(), "❌ Frequency detector failed to start");
+      	RCLCPP_ERROR(this->get_logger(), "Frequency detector failed to start");
       	receiver_running_.store(false);
       	return;
       } else {
@@ -626,9 +623,9 @@ const double consistencyWindow = 0.3;
   				started = freqDetector.startAsync(detConfig, fftCallback);
 
   				if (started) {
-  					RCLCPP_INFO(this->get_logger(), "✓ Microphone restarted successfully");
+  					RCLCPP_INFO(this->get_logger(), "Microphone restarted successfully");
   				} else {
-  					RCLCPP_ERROR(this->get_logger(), "✗ ERROR: Failed to restart microphone!");
+  					RCLCPP_ERROR(this->get_logger(), "ERROR: Failed to restart microphone!");
   				}
 
   				// Reset activity timer and performance counters
@@ -701,11 +698,10 @@ const double consistencyWindow = 0.3;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz for 400ms", name, freq);
+				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz", name, freq);
 				// Use system command to avoid PortAudio conflict
-				// Increased timeout to 0.4s for better detection by sender
-				std::string cmd = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq) +
-				                  " -c 2 -l 1 >/dev/null 2>&1 &";
+				std::string cmd = "timeout 0.15 speaker-test -t sine -f " + std::to_string((int)freq) +
+				                  " -c 2 >/dev/null 2>&1 &";
 				int result = system(cmd.c_str());
 				if (result == 0) {
 					RCLCPP_INFO(this->get_logger(), "Tone command sent");
