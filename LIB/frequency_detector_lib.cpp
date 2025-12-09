@@ -277,7 +277,8 @@ private:
 			maxMag = std::max(maxMag, magnitudes[i]);
 		}
 
-		const double threshold = maxMag * 0.1;
+		// Use noise gate if set, otherwise use relative threshold (10% of max)
+		const double threshold = (config_.noiseGate > 0.0) ? config_.noiseGate : (maxMag * 0.1);
 
 		// Set frequency range for peak detection
 		int minBin = static_cast<int>(20.0 / freqPerBin);

@@ -137,6 +137,7 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 			detConfig.updateRate = 20.0;
 			detConfig.bandpassLow = 1500.0;    // Filter: 1.5-4 kHz band for confirmation tones
 			detConfig.bandpassHigh = 4000.0;   // Covers success (2.5+3.5 kHz) and failure (2.0+3.0 kHz)
+			detConfig.noiseGate = 6.0;         // Absolute magnitude threshold to filter background noise
 
 			auto callback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
 				if (stopListening.load()) return;

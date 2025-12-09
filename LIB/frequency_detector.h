@@ -22,6 +22,7 @@ public:
 		double bandpassLow = 0.0;         // Low cutoff Hz (0 = disabled)
 		double bandpassHigh = 0.0;        // High cutoff Hz (0 = disabled)
 		double updateRate = 20.0;         // Updates per second
+		double noiseGate = 0.0;           // Absolute magnitude threshold (0 = use relative 10%)
 	};
 
 	FrequencyDetector() = default;

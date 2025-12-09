@@ -246,6 +246,7 @@ detConfig.duration = 0.0;           // Continuous
 detConfig.bandpassLow = 4000.0;     // Filter out frequencies below 4000 Hz
 detConfig.bandpassHigh = 17000.0;   // Filter out frequencies above 17000 Hz (removes 19980 Hz noise)
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
+detConfig.noiseGate = 6.0;          // Absolute magnitude threshold to filter background noise
 
 // Consistency checking for chord detection
 const int minDetections = 2;  // Require 2 consistent detections
