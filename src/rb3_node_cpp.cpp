@@ -222,7 +222,7 @@ const double FEEDBACK_FAILURE_FREQ2 = 3000.0;  // Failure tone 2 (3.0 kHz)
 const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
 
 // Helper function to play feedback sound with two tones using ToneGenerator
-auto playFeedbackSound = [this](double freq1, double freq2) {
+auto playFeedbackSound = [this, FEEDBACK_DURATION](double freq1, double freq2) {
 	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz + %.0f Hz tones for 400ms", freq1, freq2);
 	// Use ToneGenerator to play both tones simultaneously via PortAudio
 	ToneGenerator toneGen;
