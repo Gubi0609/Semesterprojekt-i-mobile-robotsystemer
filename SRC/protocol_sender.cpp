@@ -141,15 +141,15 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 			auto callback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
 				if (stopListening.load()) return;
 
-				// Look for success tone (17.5 kHz ± 200 Hz) or failure tone (18.0 kHz ± 200 Hz)
+				// Look for success tone (17.5 kHz ± 50 Hz) or failure tone (18.0 kHz ± 50 Hz)
 				for (const auto& peak : peaks) {
-					if (peak.frequency >= 17300.0 && peak.frequency <= 17700.0 && peak.magnitude > 0.01) {
+					if (peak.frequency >= 17450.0 && peak.frequency <= 17550.0 && peak.magnitude > 0.01) {
 						std::cout << "SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
 						feedbackReceived.store(true);
 						feedbackType.store(1); // Positive confirmation
 						stopListening.store(true);
 						return;
-					} else if (peak.frequency >= 17800.0 && peak.frequency <= 18200.0 && peak.magnitude > 0.01) {
+					} else if (peak.frequency >= 17950.0 && peak.frequency <= 18050.0 && peak.magnitude > 0.01) {
 						std::cout << "FAILURE feedback detected! (" << peak.frequency << " Hz)\n";
 						feedbackReceived.store(true);
 						feedbackType.store(2); // Negative confirmation
