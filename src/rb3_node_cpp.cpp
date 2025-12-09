@@ -213,18 +213,23 @@ auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 auto feedbackToneGen = std::make_shared<ToneGenerator>();
 
 // Feedback sound configurations (audible range, avoid protocol bands)
-const double FEEDBACK_SUCCESS_FREQ = 17500.0;  // Success confirmation (17.5 kHz) - above chord range
-const double FEEDBACK_FAILURE_FREQ = 18000.0;  // Failure/error tone (18.0 kHz) - above chord range
+// Confirmation tones - using two simultaneous frequencies for better noise immunity
+const double FEEDBACK_SUCCESS_FREQ1 = 2500.0;  // Success tone 1 (2.5 kHz)
+const double FEEDBACK_SUCCESS_FREQ2 = 3500.0;  // Success tone 2 (3.5 kHz)
+const double FEEDBACK_FAILURE_FREQ1 = 2000.0;  // Failure tone 1 (2.0 kHz)
+const double FEEDBACK_FAILURE_FREQ2 = 3000.0;  // Failure tone 2 (3.0 kHz)
 const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
 
-// Helper function to play feedback sound - capture all needed variables
-auto playFeedbackSound = [this](double frequency) {
-	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz tone for 400ms", frequency);
-	// Use system beep via speaker-test with timeout (avoids PortAudio conflict)
-	// Increased timeout to 0.4s for better detection by sender
-	std::string cmd = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)frequency) +
-	                  " -c 2 >/dev/null 2>&1 &";
-	system(cmd.c_str());
+// Helper function to play feedback sound with two tones
+auto playFeedbackSound = [this](double freq1, double freq2) {
+	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz + %.0f Hz tones for 400ms", freq1, freq2);
+	// Play both tones simultaneously using two speaker-test processes
+	std::string cmd1 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq1) +
+	                   " -c 2 >/dev/null 2>&1 &";
+	std::string cmd2 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq2) +
+	                   " -c 2 >/dev/null 2>&1 &";
+	system(cmd1.c_str());
+	system(cmd2.c_str());
 };
 
 // Create low-level frequency detector to track all FFT operations
@@ -394,8 +399,8 @@ const double consistencyWindow = 0.3;
       						}
       						
       						// Play failure sound
-      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
-      							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
+      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ1, FEEDBACK_FAILURE_FREQ2]() {
+      							playFeedbackSound(FEEDBACK_FAILURE_FREQ1, FEEDBACK_FAILURE_FREQ2);
       						}).detach();
       						chordCandidates.erase(decodedValue);
       						// Don't update lastValue/lastTimestamp for failed CRC
@@ -434,8 +439,8 @@ const double consistencyWindow = 0.3;
       						}
       						
       						// Play failure sound
-      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ]() {
-      							playFeedbackSound(FEEDBACK_FAILURE_FREQ);
+      						std::thread([playFeedbackSound, FEEDBACK_FAILURE_FREQ1, FEEDBACK_FAILURE_FREQ2]() {
+      							playFeedbackSound(FEEDBACK_FAILURE_FREQ1, FEEDBACK_FAILURE_FREQ2);
       						}).detach();
       						chordCandidates.erase(decodedValue);
       						// Don't update lastValue/lastTimestamp for failed decode
@@ -529,8 +534,8 @@ const double consistencyWindow = 0.3;
       					rxData.command = cmdType;
 
       					// Play success sound before processing command
-      					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ]() {
-      						playFeedbackSound(FEEDBACK_SUCCESS_FREQ);
+      					std::thread([playFeedbackSound, FEEDBACK_SUCCESS_FREQ1, FEEDBACK_SUCCESS_FREQ2]() {
+      						playFeedbackSound(FEEDBACK_SUCCESS_FREQ1, FEEDBACK_SUCCESS_FREQ2);
       					}).detach();
 
       					// Log successful reception to database
@@ -692,30 +697,29 @@ const double consistencyWindow = 0.3;
 			RCLCPP_INFO(this->get_logger(), "");
 
 			auto toneGen = std::make_shared<ToneGenerator>();
-			const double SUCCESS_FREQ = 17500.0;
-			const double FAILURE_FREQ = 18000.0;
-			const double DURATION = 0.5;  // 500ms for testing
+			const double SUCCESS_FREQ1 = 2500.0;
+			const double SUCCESS_FREQ2 = 3500.0;
+			const double FAILURE_FREQ1 = 2000.0;
+			const double FAILURE_FREQ2 = 3000.0;
 
-			auto playTone = [this](double freq, const char* name) {
-				RCLCPP_INFO(this->get_logger(), " Playing %s tone: %.0f Hz for 400ms", name, freq);
-				// Use system command to avoid PortAudio conflict
-				// Increased timeout to 0.4s for better detection by sender
-				std::string cmd = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq) +
-				                  " -c 2 >/dev/null 2>&1 &";
-				int result = system(cmd.c_str());
-				if (result == 0) {
-					RCLCPP_INFO(this->get_logger(), "Tone command sent");
-				} else {
-					RCLCPP_ERROR(this->get_logger(), "Failed to send tone command");
-				}
+			auto playTwoTones = [this](double freq1, double freq2, const char* name) {
+				RCLCPP_INFO(this->get_logger(), " Playing %s tones: %.0f Hz + %.0f Hz for 400ms", name, freq1, freq2);
+				// Play both tones simultaneously
+				std::string cmd1 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq1) +
+				                   " -c 2 >/dev/null 2>&1 &";
+				std::string cmd2 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq2) +
+				                   " -c 2 >/dev/null 2>&1 &";
+				system(cmd1.c_str());
+				system(cmd2.c_str());
+				RCLCPP_INFO(this->get_logger(), "Tone commands sent");
 			};
 
 			while(keyboard_running_.load()) {
 				char c = getchar();
 				if (c == 's' || c == 'S') {
-					playTone(SUCCESS_FREQ, "SUCCESS");
+					playTwoTones(SUCCESS_FREQ1, SUCCESS_FREQ2, "SUCCESS");
 				} else if (c == 'f' || c == 'F') {
-					playTone(FAILURE_FREQ, "FAILURE");
+					playTwoTones(FAILURE_FREQ1, FAILURE_FREQ2, "FAILURE");
 				} else if (c == 'q' || c == 'Q') {
 					RCLCPP_INFO(this->get_logger(), "Keyboard listener stopped");
 					keyboard_running_.store(false);

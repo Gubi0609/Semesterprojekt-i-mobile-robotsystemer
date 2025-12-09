@@ -135,27 +135,42 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 			detConfig.numPeaks = 5;
 			detConfig.duration = 0.0;  // Continuous
 			detConfig.updateRate = 20.0;
-			detConfig.bandpassLow = 17000.0;   // Filter: 17-19 kHz band for confirmation tones
-			detConfig.bandpassHigh = 19000.0;  // Covers 17.5 kHz (success) and 18.0 kHz (failure)
+			detConfig.bandpassLow = 1500.0;    // Filter: 1.5-4 kHz band for confirmation tones
+			detConfig.bandpassHigh = 4000.0;   // Covers success (2.5+3.5 kHz) and failure (2.0+3.0 kHz)
 
 			auto callback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
 				if (stopListening.load()) return;
 
-				// Look for success tone (17.5 kHz ± 50 Hz) or failure tone (18.0 kHz ± 50 Hz)
+				// Look for two-tone confirmation signals
+				// Success: 2.5 kHz + 3.5 kHz (both must be present)
+				// Failure: 2.0 kHz + 3.0 kHz (both must be present)
+				bool has2000 = false, has2500 = false, has3000 = false, has3500 = false;
+
 				for (const auto& peak : peaks) {
-					if (peak.frequency >= 17450.0 && peak.frequency <= 17550.0 && peak.magnitude > 0.01) {
-						std::cout << "SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
-						feedbackReceived.store(true);
-						feedbackType.store(1); // Positive confirmation
-						stopListening.store(true);
-						return;
-					} else if (peak.frequency >= 17950.0 && peak.frequency <= 18050.0 && peak.magnitude > 0.01) {
-						std::cout << "FAILURE feedback detected! (" << peak.frequency << " Hz)\n";
-						feedbackReceived.store(true);
-						feedbackType.store(2); // Negative confirmation
-						stopListening.store(true);
-						return;
+					if (peak.magnitude > 0.01) {
+						if (peak.frequency >= 1950.0 && peak.frequency <= 2050.0) has2000 = true;
+						if (peak.frequency >= 2450.0 && peak.frequency <= 2550.0) has2500 = true;
+						if (peak.frequency >= 2950.0 && peak.frequency <= 3050.0) has3000 = true;
+						if (peak.frequency >= 3450.0 && peak.frequency <= 3550.0) has3500 = true;
 					}
+				}
+
+				// Check for success (2.5 kHz + 3.5 kHz)
+				if (has2500 && has3500) {
+					std::cout << "SUCCESS feedback detected! (2.5 kHz + 3.5 kHz)\n";
+					feedbackReceived.store(true);
+					feedbackType.store(1); // Positive confirmation
+					stopListening.store(true);
+					return;
+				}
+
+				// Check for failure (2.0 kHz + 3.0 kHz)
+				if (has2000 && has3000) {
+					std::cout << "FAILURE feedback detected! (2.0 kHz + 3.0 kHz)\n";
+					feedbackReceived.store(true);
+					feedbackType.store(2); // Negative confirmation
+					stopListening.store(true);
+					return;
 				}
 			};
 
