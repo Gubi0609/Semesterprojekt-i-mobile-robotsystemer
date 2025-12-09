@@ -1,0 +1,667 @@
+================================================================================
+Protocol Communication Database Log
+Generated: Tue Dec  9 10:22:54 2025
+Database file: ../TEST_RESULTS/protocol_communication.db
+================================================================================
+
+=== SENT DATA ===
+--------------------------------------------------------------------------------
+Entry #1
+  Command: RESET
+  Start Time: 2025-12-09 10:20:11.471
+  End Time: N/A
+  Response Time: N/A
+  Speed: 0, Turn Speed: 0, Duration: 0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: No response
+--------------------------------------------------------------------------------
+Entry #2
+  Command: RESET
+  Start Time: 2025-12-09 10:20:20.954
+  End Time: 2025-12-09 10:20:22.137
+  Response Time: 1183 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #3
+  Command: RESET
+  Start Time: 2025-12-09 10:20:24.152
+  End Time: 2025-12-09 10:20:25.028
+  Response Time: 876 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #4
+  Command: RESET
+  Start Time: 2025-12-09 10:20:27.044
+  End Time: 2025-12-09 10:20:27.924
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #5
+  Command: RESET
+  Start Time: 2025-12-09 10:20:29.946
+  End Time: 2025-12-09 10:20:30.825
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #6
+  Command: RESET
+  Start Time: 2025-12-09 10:20:32.847
+  End Time: 2025-12-09 10:20:33.727
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #7
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-09 10:20:34.043
+  End Time: 2025-12-09 10:20:34.926
+  Response Time: 883 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #8
+  Command: Drive 2s @ 25%
+  Start Time: 2025-12-09 10:20:35.243
+  End Time: 2025-12-09 10:20:38.111
+  Response Time: 2868 ms
+  Speed: 25.0, Turn Speed: 0.0, Duration: 2.0
+  Command Bits - Decoded: 0x410, Encoded: 0x410c
+  Tones: 5166.7 Hz, 7666.7 Hz, 10500.0 Hz, 15500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #9
+  Command: RESET
+  Start Time: 2025-12-09 10:20:40.126
+  End Time: 2025-12-09 10:20:41.006
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #10
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-09 10:20:41.327
+  End Time: 2025-12-09 10:20:42.204
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #11
+  Command: Drive 3s @ 50%
+  Start Time: 2025-12-09 10:20:42.519
+  End Time: 2025-12-09 10:20:43.746
+  Response Time: 1227 ms
+  Speed: 50.0, Turn Speed: 0.0, Duration: 3.0
+  Command Bits - Decoded: 0x620, Encoded: 0x620e
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 15833.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #12
+  Command: RESET
+  Start Time: 2025-12-09 10:20:45.762
+  End Time: 2025-12-09 10:20:46.635
+  Response Time: 873 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #13
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-09 10:20:46.957
+  End Time: 2025-12-09 10:20:47.834
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #14
+  Command: Drive 1s @ 75%
+  Start Time: 2025-12-09 10:20:48.149
+  End Time: 2025-12-09 10:20:49.029
+  Response Time: 880 ms
+  Speed: 75.0, Turn Speed: 0.0, Duration: 1.0
+  Command Bits - Decoded: 0x22f, Encoded: 0x22f5
+  Tones: 4833.3 Hz, 7833.3 Hz, 13000.0 Hz, 14333.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #15
+  Command: RESET
+  Start Time: 2025-12-09 10:20:51.044
+  End Time: 2025-12-09 10:20:51.922
+  Response Time: 878 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #16
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-09 10:20:52.225
+  End Time: 2025-12-09 10:20:53.102
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #17
+  Command: Drive 2s @ 100%
+  Start Time: 2025-12-09 10:20:53.418
+  End Time: 2025-12-09 10:20:54.294
+  Response Time: 876 ms
+  Speed: 100.0, Turn Speed: 0.0, Duration: 2.0
+  Command Bits - Decoded: 0x43f, Encoded: 0x43f4
+  Tones: 5166.7 Hz, 8000.0 Hz, 13000.0 Hz, 14166.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #18
+  Command: RESET
+  Start Time: 2025-12-09 10:20:56.312
+  End Time: 2025-12-09 10:20:57.191
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #19
+  Command: Mode: DRIVE FOR DURATION
+  Start Time: 2025-12-09 10:20:57.514
+  End Time: 2025-12-09 10:20:58.390
+  Response Time: 876 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x001, Encoded: 0x0013
+  Tones: 4500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #20
+  Command: Drive 4s @ 30%
+  Start Time: 2025-12-09 10:20:58.706
+  End Time: 2025-12-09 10:20:59.934
+  Response Time: 1228 ms
+  Speed: 30.0, Turn Speed: 0.0, Duration: 4.0
+  Command Bits - Decoded: 0x813, Encoded: 0x8131
+  Tones: 5833.3 Hz, 7666.7 Hz, 11000.0 Hz, 13666.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #21
+  Command: RESET
+  Start Time: 2025-12-09 10:21:01.950
+  End Time: 2025-12-09 10:21:02.829
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #22
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-09 10:21:03.151
+  End Time: 2025-12-09 10:21:04.032
+  Response Time: 881 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #23
+  Command: Turn 2s @ 25% (right)
+  Start Time: 2025-12-09 10:21:04.350
+  End Time: 2025-12-09 10:21:05.229
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 25.0, Duration: 2.0
+  Command Bits - Decoded: 0x427, Encoded: 0x427a
+  Tones: 5166.7 Hz, 7833.3 Hz, 11666.7 Hz, 15166.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #24
+  Command: RESET
+  Start Time: 2025-12-09 10:21:07.244
+  End Time: 2025-12-09 10:21:08.124
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #25
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-09 10:21:08.446
+  End Time: 2025-12-09 10:21:09.331
+  Response Time: 885 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #26
+  Command: Turn 2s @ -25% (left)
+  Start Time: 2025-12-09 10:21:09.646
+  End Time: 2025-12-09 10:21:10.627
+  Response Time: 981 ms
+  Speed: 0.0, Turn Speed: -25.0, Duration: 2.0
+  Command Bits - Decoded: 0x418, Encoded: 0x4187
+  Tones: 5166.7 Hz, 7666.7 Hz, 11833.3 Hz, 14666.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #27
+  Command: RESET
+  Start Time: 2025-12-09 10:21:12.644
+  End Time: 2025-12-09 10:21:13.523
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #28
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-09 10:21:13.846
+  End Time: 2025-12-09 10:21:14.722
+  Response Time: 876 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #29
+  Command: Turn 3s @ 50% (right)
+  Start Time: 2025-12-09 10:21:15.037
+  End Time: 2025-12-09 10:21:15.914
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 50.0, Duration: 3.0
+  Command Bits - Decoded: 0x62f, Encoded: 0x62fc
+  Tones: 5500.0 Hz, 7833.3 Hz, 13000.0 Hz, 15500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #30
+  Command: RESET
+  Start Time: 2025-12-09 10:21:17.931
+  End Time: 2025-12-09 10:21:18.809
+  Response Time: 878 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #31
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-09 10:21:19.131
+  End Time: 2025-12-09 10:21:20.010
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #32
+  Command: Turn 1s @ -75% (left)
+  Start Time: 2025-12-09 10:21:20.326
+  End Time: 2025-12-09 10:21:21.206
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: -75.0, Duration: 1.0
+  Command Bits - Decoded: 0x208, Encoded: 0x2086
+  Tones: 4833.3 Hz, 7500.0 Hz, 11833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #33
+  Command: RESET
+  Start Time: 2025-12-09 10:21:23.221
+  End Time: 2025-12-09 10:21:24.105
+  Response Time: 884 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #34
+  Command: Mode: TURN FOR DURATION
+  Start Time: 2025-12-09 10:21:24.427
+  End Time: 2025-12-09 10:21:25.306
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x002, Encoded: 0x0026
+  Tones: 4500.0 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #35
+  Command: Turn 2s @ 100% (right)
+  Start Time: 2025-12-09 10:21:25.623
+  End Time: 2025-12-09 10:21:26.505
+  Response Time: 882 ms
+  Speed: 0.0, Turn Speed: 100.0, Duration: 2.0
+  Command Bits - Decoded: 0x43f, Encoded: 0x43f4
+  Tones: 5166.7 Hz, 8000.0 Hz, 13000.0 Hz, 14166.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #36
+  Command: RESET
+  Start Time: 2025-12-09 10:21:28.522
+  End Time: 2025-12-09 10:21:29.402
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #37
+  Command: Mode: DRIVE CONTINUOUS
+  Start Time: 2025-12-09 10:21:29.724
+  End Time: 2025-12-09 10:21:30.600
+  Response Time: 876 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x003, Encoded: 0x0035
+  Tones: 4500.0 Hz, 7500.0 Hz, 11000.0 Hz, 14333.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #38
+  Command: Drive continuous @ 25%
+  Start Time: 2025-12-09 10:21:30.917
+  End Time: 2025-12-09 10:21:31.794
+  Response Time: 877 ms
+  Speed: 25.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x400, Encoded: 0x4009
+  Tones: 5166.7 Hz, 7500.0 Hz, 10500.0 Hz, 15000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #39
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:21:33.809
+  End Time: 2025-12-09 10:21:34.689
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #40
+  Command: STOP
+  Start Time: 2025-12-09 10:21:35.011
+  End Time: 2025-12-09 10:21:35.892
+  Response Time: 881 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #41
+  Command: RESET
+  Start Time: 2025-12-09 10:21:37.907
+  End Time: 2025-12-09 10:21:38.787
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #42
+  Command: Mode: DRIVE CONTINUOUS
+  Start Time: 2025-12-09 10:21:39.109
+  End Time: 2025-12-09 10:21:39.990
+  Response Time: 881 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x003, Encoded: 0x0035
+  Tones: 4500.0 Hz, 7500.0 Hz, 11000.0 Hz, 14333.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #43
+  Command: Drive continuous @ 50%
+  Start Time: 2025-12-09 10:21:40.306
+  End Time: 2025-12-09 10:21:41.186
+  Response Time: 880 ms
+  Speed: 50.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x800, Encoded: 0x8001
+  Tones: 5833.3 Hz, 7500.0 Hz, 10500.0 Hz, 13666.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #44
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:21:43.201
+  End Time: 2025-12-09 10:21:44.081
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #45
+  Command: STOP
+  Start Time: 2025-12-09 10:21:44.397
+  End Time: 2025-12-09 10:21:45.274
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #46
+  Command: RESET
+  Start Time: 2025-12-09 10:21:47.289
+  End Time: 2025-12-09 10:21:48.168
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #47
+  Command: Mode: DRIVE CONTINUOUS
+  Start Time: 2025-12-09 10:21:48.490
+  End Time: N/A
+  Response Time: N/A
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x003, Encoded: 0x0035
+  Tones: 4500.0 Hz, 7500.0 Hz, 11000.0 Hz, 14333.3 Hz
+  Confirmation: No response
+--------------------------------------------------------------------------------
+Entry #48
+  Command: Drive continuous @ 75%
+  Start Time: 2025-12-09 10:21:54.776
+  End Time: 2025-12-09 10:21:55.652
+  Response Time: 876 ms
+  Speed: 75.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0xbff, Encoded: 0xbff7
+  Tones: 6333.3 Hz, 10000.0 Hz, 13000.0 Hz, 14666.7 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #49
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:21:57.667
+  End Time: 2025-12-09 10:21:58.547
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #50
+  Command: STOP
+  Start Time: 2025-12-09 10:21:58.863
+  End Time: 2025-12-09 10:21:59.743
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #51
+  Command: RESET
+  Start Time: 2025-12-09 10:22:01.759
+  End Time: 2025-12-09 10:22:02.636
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #52
+  Command: Mode: TURN CONTINUOUS
+  Start Time: 2025-12-09 10:22:02.958
+  End Time: 2025-12-09 10:22:03.835
+  Response Time: 877 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x004, Encoded: 0x004c
+  Tones: 4500.0 Hz, 7500.0 Hz, 11166.7 Hz, 15500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #53
+  Command: Turn continuous @ 30%
+  Start Time: 2025-12-09 10:22:04.151
+  End Time: 2025-12-09 10:22:05.029
+  Response Time: 878 ms
+  Speed: 0.0, Turn Speed: 30.0, Duration: 0.0
+  Command Bits - Decoded: 0xa66, Encoded: 0xa66b
+  Tones: 6166.7 Hz, 8500.0 Hz, 11500.0 Hz, 15333.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #54
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:22:07.045
+  End Time: 2025-12-09 10:22:07.920
+  Response Time: 875 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #55
+  Command: STOP
+  Start Time: 2025-12-09 10:22:08.242
+  End Time: 2025-12-09 10:22:09.325
+  Response Time: 1083 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #56
+  Command: RESET
+  Start Time: 2025-12-09 10:22:11.329
+  End Time: 2025-12-09 10:22:12.209
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #57
+  Command: Mode: TURN CONTINUOUS
+  Start Time: 2025-12-09 10:22:12.524
+  End Time: 2025-12-09 10:22:13.406
+  Response Time: 882 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x004, Encoded: 0x004c
+  Tones: 4500.0 Hz, 7500.0 Hz, 11166.7 Hz, 15500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #58
+  Command: Turn continuous @ -50%
+  Start Time: 2025-12-09 10:22:13.722
+  End Time: 2025-12-09 10:22:14.600
+  Response Time: 878 ms
+  Speed: 0.0, Turn Speed: -50.0, Duration: 0.0
+  Command Bits - Decoded: 0x400, Encoded: 0x4009
+  Tones: 5166.7 Hz, 7500.0 Hz, 10500.0 Hz, 15000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #59
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:22:16.617
+  End Time: 2025-12-09 10:22:17.499
+  Response Time: 882 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #60
+  Command: STOP
+  Start Time: 2025-12-09 10:22:17.821
+  End Time: 2025-12-09 10:22:20.380
+  Response Time: 2559 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #61
+  Command: RESET
+  Start Time: 2025-12-09 10:22:22.397
+  End Time: 2025-12-09 10:22:24.959
+  Response Time: 2562 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #62
+  Command: Mode: TURN CONTINUOUS
+  Start Time: 2025-12-09 10:22:25.274
+  End Time: 2025-12-09 10:22:26.154
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x004, Encoded: 0x004c
+  Tones: 4500.0 Hz, 7500.0 Hz, 11166.7 Hz, 15500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #63
+  Command: Turn continuous @ 80%
+  Start Time: 2025-12-09 10:22:26.457
+  End Time: 2025-12-09 10:22:27.336
+  Response Time: 879 ms
+  Speed: 0.0, Turn Speed: 80.0, Duration: 0.0
+  Command Bits - Decoded: 0xe66, Encoded: 0xe662
+  Tones: 6833.3 Hz, 8500.0 Hz, 11500.0 Hz, 13833.3 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #64
+  Command: RESET (preparing for STOP)
+  Start Time: 2025-12-09 10:22:29.351
+  End Time: 2025-12-09 10:22:30.231
+  Response Time: 880 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x000, Encoded: 0x0000
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Entry #65
+  Command: STOP
+  Start Time: 2025-12-09 10:22:30.547
+  End Time: 2025-12-09 10:22:31.428
+  Response Time: 881 ms
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Command Bits - Decoded: 0x005, Encoded: 0x005f
+  Tones: 4500.0 Hz, 7500.0 Hz, 11333.3 Hz, 16000.0 Hz
+  Confirmation: Positive
+--------------------------------------------------------------------------------
+Total sent entries: 65
+
+=== RECEIVED DATA ===
+--------------------------------------------------------------------------------
+Total received entries: 0
+
+================================================================================
+End of log
+================================================================================

@@ -135,19 +135,21 @@ void sendCommandWithRetry(AudioComm::ChordTransmitter& transmitter, CRC& crc, ui
 			detConfig.numPeaks = 5;
 			detConfig.duration = 0.0;  // Continuous
 			detConfig.updateRate = 20.0;
+			detConfig.bandpassLow = 17000.0;   // Filter: 17-19 kHz band for confirmation tones
+			detConfig.bandpassHigh = 19000.0;  // Covers 17.5 kHz (success) and 18.0 kHz (failure)
 
 			auto callback = [&](const std::vector<FrequencyDetector::FrequencyPeak>& peaks) {
 				if (stopListening.load()) return;
 
-				// Look for success tone (3.5 kHz ± 100 Hz) or failure tone (2.5 kHz ± 100 Hz)
+				// Look for success tone (17.5 kHz ± 200 Hz) or failure tone (18.0 kHz ± 200 Hz)
 				for (const auto& peak : peaks) {
-					if (peak.frequency >= 3400.0 && peak.frequency <= 3600.0 && peak.magnitude > 0.01) {
+					if (peak.frequency >= 17300.0 && peak.frequency <= 17700.0 && peak.magnitude > 0.01) {
 						std::cout << "SUCCESS feedback detected! (" << peak.frequency << " Hz)\n";
 						feedbackReceived.store(true);
 						feedbackType.store(1); // Positive confirmation
 						stopListening.store(true);
 						return;
-					} else if (peak.frequency >= 2400.0 && peak.frequency <= 2600.0 && peak.magnitude > 0.01) {
+					} else if (peak.frequency >= 17800.0 && peak.frequency <= 18200.0 && peak.magnitude > 0.01) {
 						std::cout << "FAILURE feedback detected! (" << peak.frequency << " Hz)\n";
 						feedbackReceived.store(true);
 						feedbackType.store(2); // Negative confirmation

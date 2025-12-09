@@ -213,8 +213,8 @@ auto decoder = std::make_shared<AudioComm::ChordDecoder>(chordConfig);
 auto feedbackToneGen = std::make_shared<ToneGenerator>();
 
 // Feedback sound configurations (audible range, avoid protocol bands)
-const double FEEDBACK_SUCCESS_FREQ = 3500.0;  // Success confirmation (3.5 kHz)
-const double FEEDBACK_FAILURE_FREQ = 4000.0;  // Failure/error tone (4.0 kHz) - below protocol range
+const double FEEDBACK_SUCCESS_FREQ = 17500.0;  // Success confirmation (17.5 kHz) - above chord range
+const double FEEDBACK_FAILURE_FREQ = 18000.0;  // Failure/error tone (18.0 kHz) - above chord range
 const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
 
 // Helper function to play feedback sound - capture all needed variables
@@ -692,8 +692,8 @@ const double consistencyWindow = 0.3;
 			RCLCPP_INFO(this->get_logger(), "");
 
 			auto toneGen = std::make_shared<ToneGenerator>();
-			const double SUCCESS_FREQ = 3500.0;
-			const double FAILURE_FREQ = 4000.0;
+			const double SUCCESS_FREQ = 17500.0;
+			const double FAILURE_FREQ = 18000.0;
 			const double DURATION = 0.5;  // 500ms for testing
 
 			auto playTone = [this](double freq, const char* name) {
