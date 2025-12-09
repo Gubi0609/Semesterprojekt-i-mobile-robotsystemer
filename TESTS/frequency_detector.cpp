@@ -25,12 +25,15 @@ public:
 	};
 
 	FrequencyDetector(int sampleRate = 48000, int fftSize = 4096, int numPeaks = 5,
-					 double lowFreq = 0.0, double highFreq = 0.0)
+					 double lowFreq = 0.0, double highFreq = 0.0, double threshold = 0.1,
+					 double noiseGate = 0.0)
 		: sampleRate_(sampleRate)
 		, fftSize_(fftSize)
 		, numPeaks_(numPeaks)
 		, bandpassLow_(lowFreq)
 		, bandpassHigh_(highFreq)
+		, threshold_(threshold)
+		, noiseGate_(noiseGate)
 	{
 		// Allocate FFT buffers
 		inputBuffer_.resize(fftSize_);
@@ -225,7 +228,8 @@ private:
 		}
 
 		// Find peaks (local maxima with significant magnitude)
-		const double threshold = maxMag * 0.1;  // 10% of max
+		// Use noise gate if set, otherwise use relative threshold
+		const double threshold = (noiseGate_ > 0.0) ? noiseGate_ : (maxMag * threshold_);
 
 		// Set frequency range for peak detection
 		int minBin = static_cast<int>(20.0 / freqPerBin);  // ignore below 20 Hz
@@ -281,6 +285,11 @@ private:
 		if (useBandpass_) {
 			std::cout << "  Bandpass Filter: " << bandpassLow_ << " - "
 					  << bandpassHigh_ << " Hz\n";
+		}
+		if (noiseGate_ > 0.0) {
+			std::cout << "  Noise Gate: " << noiseGate_ << " (absolute)\n";
+		} else {
+			std::cout << "  Detection Threshold: " << (threshold_ * 100.0) << "% of max\n";
 		}
 		std::cout << "========================================\n";
 		std::cout << "Press Ctrl+C to stop...\n\n";
@@ -387,6 +396,12 @@ private:
 	double bandpassLow_ = 0.0;
 	double bandpassHigh_ = 0.0;
 
+	// Detection threshold (fraction of max magnitude)
+	double threshold_ = 0.1;
+
+	// Absolute noise gate (if > 0, overrides relative threshold)
+	double noiseGate_ = 0.0;
+
 	// Biquad filter coefficients and state
 	double b0_, b1_, b2_, a1_, a2_;
 	double x1_, x2_, y1_, y2_;
@@ -400,6 +415,8 @@ int main(int argc, char** argv) {
 	int numPeaks = 10;
 	double lowFreq = 4000.0;    // Bandpass low (matches rb3_node)
 	double highFreq = 17000.0;  // Bandpass high (matches rb3_node)
+	double threshold = 0.1;     // 10% of max magnitude
+	double noiseGate = 0.0;     // Absolute noise gate (0 = disabled)
 
 	// Parse command line arguments
 	for (int i = 1; i < argc; ++i) {
@@ -414,14 +431,20 @@ int main(int argc, char** argv) {
 			lowFreq = std::atof(argv[++i]);
 		} else if (arg == "-high" && i + 1 < argc) {
 			highFreq = std::atof(argv[++i]);
+		} else if (arg == "-thresh" && i + 1 < argc) {
+			threshold = std::atof(argv[++i]);
+		} else if (arg == "-gate" && i + 1 < argc) {
+			noiseGate = std::atof(argv[++i]);
 		} else if (arg == "-h" || arg == "--help") {
 			std::cout << "Usage: " << argv[0] << " [options]\n"
 					  << "Options:\n"
 					  << "  -sr <rate>    Sample rate (default: 48000)\n"
 					  << "  -fft <size>   FFT size (default: 4096)\n"
-					  << "  -peaks <n>    Number of peaks to show (default: 5)\n"
-					  << "  -low <freq>   Bandpass low cutoff in Hz (optional)\n"
-					  << "  -high <freq>  Bandpass high cutoff in Hz (optional)\n"
+					  << "  -peaks <n>    Number of peaks to show (default: 10)\n"
+					  << "  -low <freq>   Bandpass low cutoff in Hz (default: 4000)\n"
+					  << "  -high <freq>  Bandpass high cutoff in Hz (default: 17000)\n"
+					  << "  -thresh <f>   Detection threshold 0.0-1.0 (default: 0.1 = 10%)\n"
+					  << "  -gate <mag>   Absolute noise gate magnitude (overrides -thresh)\n"
 					  << "  -h, --help    Show this help\n"
 					  << "\nExamples:\n"
 					  << "  " << argv[0] << " -fft 8192\n"
@@ -431,7 +454,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	FrequencyDetector detector(sampleRate, fftSize, numPeaks, lowFreq, highFreq);
+	FrequencyDetector detector(sampleRate, fftSize, numPeaks, lowFreq, highFreq, threshold, noiseGate);
 
 	if (!detector.start()) {
 		std::cerr << "Failed to start detector.\n";

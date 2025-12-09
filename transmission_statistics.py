@@ -616,7 +616,7 @@ def main():
         csv_output.append(generate_csv_output(stats, title))
 
         if "--verbose" in sys.argv or "-v" in sys.argv:
-            print_detailed_matching(matched, unmatched_sent, unmatched_received)
+            print_detailed_matching(matched, unmatched_sent, unmatched_received, all_sent)
 
     # Also show overall statistics
     print("\n" + "=" * 70)

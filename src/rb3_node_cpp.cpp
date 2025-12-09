@@ -214,22 +214,25 @@ auto feedbackToneGen = std::make_shared<ToneGenerator>();
 
 // Feedback sound configurations (audible range, avoid protocol bands)
 // Confirmation tones - using two simultaneous frequencies for better noise immunity
+// Confirmation tones - using two simultaneous frequencies for better noise immunity
 const double FEEDBACK_SUCCESS_FREQ1 = 2500.0;  // Success tone 1 (2.5 kHz)
 const double FEEDBACK_SUCCESS_FREQ2 = 3500.0;  // Success tone 2 (3.5 kHz)
 const double FEEDBACK_FAILURE_FREQ1 = 2000.0;  // Failure tone 1 (2.0 kHz)
 const double FEEDBACK_FAILURE_FREQ2 = 3000.0;  // Failure tone 2 (3.0 kHz)
 const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
 
-// Helper function to play feedback sound with two tones
+// Helper function to play feedback sound with two tones using ToneGenerator
 auto playFeedbackSound = [this](double freq1, double freq2) {
 	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz + %.0f Hz tones for 400ms", freq1, freq2);
-	// Play both tones simultaneously using two speaker-test processes
-	std::string cmd1 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq1) +
-	                   " -c 2 >/dev/null 2>&1 &";
-	std::string cmd2 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq2) +
-	                   " -c 2 >/dev/null 2>&1 &";
-	system(cmd1.c_str());
-	system(cmd2.c_str());
+	// Use ToneGenerator to play both tones simultaneously via PortAudio
+	ToneGenerator toneGen;
+	ToneGenerator::Config config;
+	config.frequencies = {freq1, freq2};
+	config.duration = FEEDBACK_DURATION;
+	config.sampleRate = 48000.0;
+	config.gain = 0.9;
+	config.channels = 2;
+	toneGen.start(config);  // Blocking call - waits for completion
 };
 
 // Create low-level frequency detector to track all FFT operations
@@ -246,7 +249,7 @@ detConfig.bandpassHigh = 17000.0;   // Filter out frequencies above 17000 Hz (re
 detConfig.updateRate = 20.0;        // 20 Hz target update rate
 
 // Consistency checking for chord detection
-const int minDetections = 3;  // CHANGED: Increased from 2 to 3 detections
+const int minDetections = 2;  // Require 2 consistent detections
 const double consistencyWindow = 0.3;
 
       //"lightweight duplicate-detection state local to this thread"
@@ -696,7 +699,6 @@ const double consistencyWindow = 0.3;
 			RCLCPP_INFO(this->get_logger(), "  Press 'q' - Quit keyboard listener");
 			RCLCPP_INFO(this->get_logger(), "");
 
-			auto toneGen = std::make_shared<ToneGenerator>();
 			const double SUCCESS_FREQ1 = 2500.0;
 			const double SUCCESS_FREQ2 = 3500.0;
 			const double FAILURE_FREQ1 = 2000.0;
@@ -704,14 +706,16 @@ const double consistencyWindow = 0.3;
 
 			auto playTwoTones = [this](double freq1, double freq2, const char* name) {
 				RCLCPP_INFO(this->get_logger(), " Playing %s tones: %.0f Hz + %.0f Hz for 400ms", name, freq1, freq2);
-				// Play both tones simultaneously
-				std::string cmd1 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq1) +
-				                   " -c 2 >/dev/null 2>&1 &";
-				std::string cmd2 = "timeout 0.4 speaker-test -t sine -f " + std::to_string((int)freq2) +
-				                   " -c 2 >/dev/null 2>&1 &";
-				system(cmd1.c_str());
-				system(cmd2.c_str());
-				RCLCPP_INFO(this->get_logger(), "Tone commands sent");
+				// Use ToneGenerator to play both tones simultaneously
+				ToneGenerator toneGen;
+				ToneGenerator::Config config;
+				config.frequencies = {freq1, freq2};
+				config.duration = 0.4;
+				config.sampleRate = 48000.0;
+				config.gain = 0.9;
+				config.channels = 2;
+				toneGen.start(config);
+				RCLCPP_INFO(this->get_logger(), "Tone playback complete");
 			};
 
 			while(keyboard_running_.load()) {
