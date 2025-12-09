@@ -221,18 +221,17 @@ const double FEEDBACK_FAILURE_FREQ1 = 2000.0;  // Failure tone 1 (2.0 kHz)
 const double FEEDBACK_FAILURE_FREQ2 = 3000.0;  // Failure tone 2 (3.0 kHz)
 const double FEEDBACK_DURATION = 0.4;          // 400ms tone duration
 
-// Helper function to play feedback sound with two tones using ToneGenerator
+// Helper function to play feedback sound with two tones
+// Uses sox (play command) which can mix multiple frequencies in one process
 auto playFeedbackSound = [this, FEEDBACK_DURATION](double freq1, double freq2) {
 	RCLCPP_INFO(this->get_logger(), "Feedback: %.0f Hz + %.0f Hz tones for 400ms", freq1, freq2);
-	// Use ToneGenerator to play both tones simultaneously via PortAudio
-	ToneGenerator toneGen;
-	ToneGenerator::Config config;
-	config.frequencies = {freq1, freq2};
-	config.duration = FEEDBACK_DURATION;
-	config.sampleRate = 48000.0;
-	config.gain = 0.9;
-	config.channels = 2;
-	toneGen.start(config);  // Blocking call - waits for completion
+	// Use sox 'play' to generate two tones mixed together (non-blocking with &)
+	// synth creates a tone, and we can chain multiple with remix
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd),
+		"play -n -c2 synth %.2f sine %.0f sine %.0f gain -3 >/dev/null 2>&1 &",
+		FEEDBACK_DURATION, freq1, freq2);
+	system(cmd);
 };
 
 // Create low-level frequency detector to track all FFT operations
@@ -706,16 +705,13 @@ const double consistencyWindow = 0.3;
 
 			auto playTwoTones = [this](double freq1, double freq2, const char* name) {
 				RCLCPP_INFO(this->get_logger(), " Playing %s tones: %.0f Hz + %.0f Hz for 400ms", name, freq1, freq2);
-				// Use ToneGenerator to play both tones simultaneously
-				ToneGenerator toneGen;
-				ToneGenerator::Config config;
-				config.frequencies = {freq1, freq2};
-				config.duration = 0.4;
-				config.sampleRate = 48000.0;
-				config.gain = 0.9;
-				config.channels = 2;
-				toneGen.start(config);
-				RCLCPP_INFO(this->get_logger(), "Tone playback complete");
+				// Use sox 'play' to generate two tones mixed together
+				char cmd[256];
+				snprintf(cmd, sizeof(cmd),
+					"play -n -c2 synth 0.4 sine %.0f sine %.0f gain -3 >/dev/null 2>&1 &",
+					freq1, freq2);
+				system(cmd);
+				RCLCPP_INFO(this->get_logger(), "Tone command sent");
 			};
 
 			while(keyboard_running_.load()) {
