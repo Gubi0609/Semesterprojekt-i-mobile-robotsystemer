@@ -1,0 +1,602 @@
+================================================================================
+Protocol Communication Database Log
+Generated: Wed Dec 10 12:44:38 2025
+Database file: turtlebot_communication.db
+================================================================================
+
+=== SENT DATA ===
+--------------------------------------------------------------------------------
+Total sent entries: 0
+
+=== RECEIVED DATA ===
+--------------------------------------------------------------------------------
+Entry #1
+  Timestamp: 2025-12-10 12:42:24.667
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #2
+  Timestamp: 2025-12-10 12:42:27.634
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #3
+  Timestamp: 2025-12-10 12:42:30.495
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #4
+  Timestamp: 2025-12-10 12:42:33.407
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #5
+  Timestamp: 2025-12-10 12:42:36.276
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #6
+  Timestamp: 2025-12-10 12:42:39.195
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #7
+  Timestamp: 2025-12-10 12:42:40.411
+  Tones: 5000.0 Hz, 7666.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0013, Decoded: 0x001
+  CRC: Valid
+  Command: MODE_DRIVE_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #8
+  Timestamp: 2025-12-10 12:42:41.578
+  Tones: 6500.0 Hz, 7500.0 Hz, 10666.7 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x410c, Decoded: 0x410
+  CRC: Valid
+  Command: DRIVE_FOR_DURATION_PARAMS
+  Speed: 25.4, Turn Speed: 0.0, Duration: 2.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #9
+  Timestamp: 2025-12-10 12:42:44.484
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #10
+  Timestamp: 2025-12-10 12:42:45.646
+  Tones: 5000.0 Hz, 7666.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0013, Decoded: 0x001
+  CRC: Valid
+  Command: MODE_DRIVE_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #11
+  Timestamp: 2025-12-10 12:42:46.867
+  Tones: 6833.3 Hz, 7500.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Command Bits - Encoded: 0x620e, Decoded: 0x620
+  CRC: Valid
+  Command: DRIVE_FOR_DURATION_PARAMS
+  Speed: 50.8, Turn Speed: 0.0, Duration: 3.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #12
+  Timestamp: 2025-12-10 12:42:49.747
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #13
+  Timestamp: 2025-12-10 12:42:50.964
+  Tones: 5000.0 Hz, 7666.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0013, Decoded: 0x001
+  CRC: Valid
+  Command: MODE_DRIVE_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #14
+  Timestamp: 2025-12-10 12:42:52.128
+  Tones: 5333.3 Hz, 10000.0 Hz, 10833.3 Hz, 13833.3 Hz
+  Command Bits - Encoded: 0x22f5, Decoded: 0x22f
+  CRC: Valid
+  Command: DRIVE_FOR_DURATION_PARAMS
+  Speed: 74.6, Turn Speed: 0.0, Duration: 1.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #15
+  Timestamp: 2025-12-10 12:42:55.005
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #16
+  Timestamp: 2025-12-10 12:42:56.230
+  Tones: 5000.0 Hz, 7666.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0013, Decoded: 0x001
+  CRC: Valid
+  Command: MODE_DRIVE_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #17
+  Timestamp: 2025-12-10 12:42:57.391
+  Tones: 5166.7 Hz, 10000.0 Hz, 11000.0 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x43f4, Decoded: 0x43f
+  CRC: Valid
+  Command: DRIVE_FOR_DURATION_PARAMS
+  Speed: 100.0, Turn Speed: 0.0, Duration: 2.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #18
+  Timestamp: 2025-12-10 12:43:00.330
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #19
+  Timestamp: 2025-12-10 12:43:01.499
+  Tones: 5000.0 Hz, 7666.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0013, Decoded: 0x001
+  CRC: Valid
+  Command: MODE_DRIVE_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #20
+  Timestamp: 2025-12-10 12:43:02.714
+  Tones: 4666.7 Hz, 8000.0 Hz, 10666.7 Hz, 14833.3 Hz
+  Command Bits - Encoded: 0x8131, Decoded: 0x813
+  CRC: Valid
+  Command: DRIVE_FOR_DURATION_PARAMS
+  Speed: 30.2, Turn Speed: 0.0, Duration: 4.1
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #21
+  Timestamp: 2025-12-10 12:43:05.636
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #22
+  Timestamp: 2025-12-10 12:43:06.797
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0026, Decoded: 0x002
+  CRC: Valid
+  Command: MODE_TURN_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #23
+  Timestamp: 2025-12-10 12:43:08.010
+  Tones: 6166.7 Hz, 8666.7 Hz, 10833.3 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x427a, Decoded: 0x427
+  CRC: Valid
+  Command: TURN_FOR_DURATION_PARAMS
+  Speed: 0.0, Turn Speed: 23.8, Duration: 2.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #24
+  Timestamp: 2025-12-10 12:43:10.877
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #25
+  Timestamp: 2025-12-10 12:43:12.088
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0026, Decoded: 0x002
+  CRC: Valid
+  Command: MODE_TURN_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #26
+  Timestamp: 2025-12-10 12:43:13.247
+  Tones: 5666.7 Hz, 8833.3 Hz, 10666.7 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x4187, Decoded: 0x418
+  CRC: Valid
+  Command: TURN_FOR_DURATION_PARAMS
+  Speed: 0.0, Turn Speed: -23.8, Duration: 2.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #27
+  Timestamp: 2025-12-10 12:43:16.166
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #28
+  Timestamp: 2025-12-10 12:43:17.380
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0026, Decoded: 0x002
+  CRC: Valid
+  Command: MODE_TURN_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #29
+  Timestamp: 2025-12-10 12:43:18.537
+  Tones: 6500.0 Hz, 10000.0 Hz, 10833.3 Hz, 14500.0 Hz
+  Command Bits - Encoded: 0x62fc, Decoded: 0x62f
+  CRC: Valid
+  Command: TURN_FOR_DURATION_PARAMS
+  Speed: 0.0, Turn Speed: 49.2, Duration: 3.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #30
+  Timestamp: 2025-12-10 12:43:21.453
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #31
+  Timestamp: 2025-12-10 12:43:22.637
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0026, Decoded: 0x002
+  CRC: Valid
+  Command: MODE_TURN_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #32
+  Timestamp: 2025-12-10 12:43:23.804
+  Tones: 5500.0 Hz, 8833.3 Hz, 10500.0 Hz, 13833.3 Hz
+  Command Bits - Encoded: 0x2086, Decoded: 0x208
+  CRC: Valid
+  Command: TURN_FOR_DURATION_PARAMS
+  Speed: 0.0, Turn Speed: -74.6, Duration: 1.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #33
+  Timestamp: 2025-12-10 12:43:26.710
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #34
+  Timestamp: 2025-12-10 12:43:27.891
+  Tones: 5500.0 Hz, 7833.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0026, Decoded: 0x002
+  CRC: Valid
+  Command: MODE_TURN_FOR_DURATION
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #35
+  Timestamp: 2025-12-10 12:43:29.097
+  Tones: 5166.7 Hz, 10000.0 Hz, 11000.0 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x43f4, Decoded: 0x43f
+  CRC: Valid
+  Command: TURN_FOR_DURATION_PARAMS
+  Speed: 0.0, Turn Speed: 100.0, Duration: 2.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #36
+  Timestamp: 2025-12-10 12:43:31.966
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #37
+  Timestamp: 2025-12-10 12:43:33.209
+  Tones: 5333.3 Hz, 8000.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0035, Decoded: 0x003
+  CRC: Valid
+  Command: MODE_DRIVE_FORWARD
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #38
+  Timestamp: 2025-12-10 12:43:34.375
+  Tones: 6000.0 Hz, 7500.0 Hz, 10500.0 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x4009, Decoded: 0x400
+  CRC: Valid
+  Command: DRIVE_FORWARD_PARAMS
+  Speed: 25.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #39
+  Timestamp: 2025-12-10 12:43:37.259
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #40
+  Timestamp: 2025-12-10 12:43:38.491
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #41
+  Timestamp: 2025-12-10 12:43:41.377
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #42
+  Timestamp: 2025-12-10 12:43:42.558
+  Tones: 5333.3 Hz, 8000.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0035, Decoded: 0x003
+  CRC: Valid
+  Command: MODE_DRIVE_FORWARD
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #43
+  Timestamp: 2025-12-10 12:43:43.741
+  Tones: 4666.7 Hz, 7500.0 Hz, 10500.0 Hz, 14833.3 Hz
+  Command Bits - Encoded: 0x8001, Decoded: 0x800
+  CRC: Valid
+  Command: DRIVE_FORWARD_PARAMS
+  Speed: 50.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #44
+  Timestamp: 2025-12-10 12:43:46.648
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #45
+  Timestamp: 2025-12-10 12:43:47.870
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #46
+  Timestamp: 2025-12-10 12:43:50.736
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #47
+  Timestamp: 2025-12-10 12:43:51.947
+  Tones: 5333.3 Hz, 8000.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0035, Decoded: 0x003
+  CRC: Valid
+  Command: MODE_DRIVE_FORWARD
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #48
+  Timestamp: 2025-12-10 12:43:53.107
+  Tones: 5666.7 Hz, 10000.0 Hz, 13000.0 Hz, 15333.3 Hz
+  Command Bits - Encoded: 0xbff7, Decoded: 0xbff
+  CRC: Valid
+  Command: DRIVE_FORWARD_PARAMS
+  Speed: 75.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #49
+  Timestamp: 2025-12-10 12:43:56.047
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #50
+  Timestamp: 2025-12-10 12:43:57.222
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #51
+  Timestamp: 2025-12-10 12:44:00.088
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #52
+  Timestamp: 2025-12-10 12:44:01.299
+  Tones: 6500.0 Hz, 8166.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x004c, Decoded: 0x004
+  CRC: Valid
+  Command: MODE_TURN
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #53
+  Timestamp: 2025-12-10 12:44:02.459
+  Tones: 6333.3 Hz, 8500.0 Hz, 11500.0 Hz, 15166.7 Hz
+  Command Bits - Encoded: 0xa66b, Decoded: 0xa66
+  CRC: Valid
+  Command: TURN_PARAMS
+  Speed: 0.0, Turn Speed: 30.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #54
+  Timestamp: 2025-12-10 12:44:05.433
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #55
+  Timestamp: 2025-12-10 12:44:06.599
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #56
+  Timestamp: 2025-12-10 12:44:09.463
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #57
+  Timestamp: 2025-12-10 12:44:10.678
+  Tones: 6500.0 Hz, 8166.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x004c, Decoded: 0x004
+  CRC: Valid
+  Command: MODE_TURN
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #58
+  Timestamp: 2025-12-10 12:44:11.839
+  Tones: 6000.0 Hz, 7500.0 Hz, 10500.0 Hz, 14166.7 Hz
+  Command Bits - Encoded: 0x4009, Decoded: 0x400
+  CRC: Valid
+  Command: TURN_PARAMS
+  Speed: 0.0, Turn Speed: -50.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #59
+  Timestamp: 2025-12-10 12:44:14.776
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #60
+  Timestamp: 2025-12-10 12:44:15.944
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #61
+  Timestamp: 2025-12-10 12:44:18.858
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #62
+  Timestamp: 2025-12-10 12:44:20.071
+  Tones: 6500.0 Hz, 8166.7 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x004c, Decoded: 0x004
+  CRC: Valid
+  Command: MODE_TURN
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #63
+  Timestamp: 2025-12-10 12:44:21.300
+  Tones: 4833.3 Hz, 8500.0 Hz, 11500.0 Hz, 15833.3 Hz
+  Command Bits - Encoded: 0xe662, Decoded: 0xe66
+  CRC: Valid
+  Command: TURN_PARAMS
+  Speed: 0.0, Turn Speed: 80.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #64
+  Timestamp: 2025-12-10 12:44:24.179
+  Tones: 4500.0 Hz, 7500.0 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x0000, Decoded: 0x000
+  CRC: Valid
+  Command: RESET
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Entry #65
+  Timestamp: 2025-12-10 12:44:25.383
+  Tones: 7000.0 Hz, 8333.3 Hz, 10500.0 Hz, 13500.0 Hz
+  Command Bits - Encoded: 0x005f, Decoded: 0x005
+  CRC: Valid
+  Command: STOP
+  Speed: 0.0, Turn Speed: 0.0, Duration: 0.0
+  Confirmation Sent: 1
+--------------------------------------------------------------------------------
+Total received entries: 65
+
+================================================================================
+End of log
+================================================================================
