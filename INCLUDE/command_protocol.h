@@ -28,8 +28,8 @@ struct DriveForDurationCommand {
 	uint8_t speedRaw;     // 0-63 (6 bits)
 
 	// Convert to actual values
-	float getDurationSeconds() const { return (durationRaw / 63.0f) * 8.0f; }
-	float getSpeedPercent() const { return (speedRaw / 63.0f) * 100.0f; }
+	float getDurationSeconds() const { return (durationRaw / 63.0f) * 8.0f; } 
+	float getSpeedPercent() const { return (speedRaw / 63.0f) * 100.0f; } // Maps 0-63 to 0-100
 
 	// Create from actual values
 	static DriveForDurationCommand create(float durationSec, float speedPercent);
@@ -74,7 +74,7 @@ struct DriveForwardCommand {
 	uint16_t speedRaw;  // 0-4095 (12 bits)
 
 	// Convert to actual value
-	float getSpeedPercent() const { return (speedRaw / 4095.0f) * 100.0f; }
+	float getSpeedPercent() const { return (speedRaw / 4095.0f) * 100.0f; } // Maps 0-4095 to 0-100%
 
 	// Create from actual value
 	static DriveForwardCommand create(float speedPercent);

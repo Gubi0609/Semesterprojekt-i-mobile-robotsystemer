@@ -234,8 +234,11 @@ def match_entries(sent: List[SentEntry], received: List[ReceivedEntry],
     # Unmatched sent = commands that were sent but never received (dropped)
     unmatched_sent = [s for s in sent if s.id not in used_sent_ids]
 
-    # Unmatched received = commands received with NO matching sent command (true false positives)
-    unmatched_received = [r for r in received if r.id not in used_received_ids]
+    # Unmatched received = commands received with NO matching sent command
+    # Only count as false positives if CRC passed (errors that slipped through)
+    # CRC failures are caught errors, not false positives
+    all_unmatched_received = [r for r in received if r.id not in used_received_ids]
+    unmatched_received = [r for r in all_unmatched_received if r.crc_valid]
 
     return matched_pairs, unmatched_sent, unmatched_received
 
@@ -299,13 +302,13 @@ def calculate_statistics(sent: List[SentEntry], received: List[ReceivedEntry],
     stats['crc_passed'] = crc_passed
 
     # Error catch rate = CRC rejections / (CRC rejections + false positives that got through)
-    # Since CRC failures are silently dropped, they don't appear in the received data
-    # We can only track negative confirmations (command decoded but rejected)
+    # Note: negative_confirmations are sent as a result of CRC failures, so they are
+    # the same events - don't double count them
     negative_confirmations = len([r for r in received if r.confirmation_sent == 2])
     stats['negative_confirmations'] = negative_confirmations
 
-    # Errors caught = explicit CRC failures + negative confirmations
-    errors_caught = crc_failed + negative_confirmations
+    # Errors caught = CRC failures (negative confirmations are just the response to these)
+    errors_caught = crc_failed
 
     # Total transmission attempts that could have errors =
     # errors caught + those that got through incorrectly (false positives)
@@ -313,7 +316,7 @@ def calculate_statistics(sent: List[SentEntry], received: List[ReceivedEntry],
 
     if total_potential_errors > 0:
         stats['error_catch_rate'] = (errors_caught / total_potential_errors) * 100
-    elif crc_failed == 0 and negative_confirmations == 0 and total_false_positives == 0:
+    elif crc_failed == 0 and total_false_positives == 0:
         # No errors detected at all - either perfect transmission or no erroneous data to catch
         # Report as N/A (represented as -1, displayed specially)
         stats['error_catch_rate'] = -1.0  # Special value for "no errors to evaluate"

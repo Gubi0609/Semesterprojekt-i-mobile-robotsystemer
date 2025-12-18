@@ -52,12 +52,8 @@ void VelocityProvider::checkDurationExpiry(){
 
 
 void VelocityProvider::update(){
-	std::lock_guard<std::recursive_mutex> lk(remu_);
-	// if(!enableDriving()) return;
-	if(state_ == State::IDLE){
-		//switch(receiver.get(currentSignal)):  //currentSignal har værdier.
-		// case : 255:
-		//	state_ = State::IDLE;
+	std::lock_guard<std::recursive_mutex> lk(remu_); //uses mutex to prevent race conditions
+	if(state_ == State::IDLE){ //should be a switch case but whatever
 
 		if(angular_z_!= 0.0f || linear_x_ != 0.0f){
 			angular_z_ = 0.0f;
@@ -68,19 +64,16 @@ void VelocityProvider::update(){
 		prev_linear_x_ = 0.0f;
 		prev_custom_duration = 0.0;
 		prev_state_ = State::IDLE;
-	} else if(state_ == State::DURATION){ //kan med fordel bruge switch (godt)
-
-			//indsæt logik til at checke at values nu ikke er lig prev values.
+	} else if(state_ == State::DURATION){  //duration based movement handles updating the clock and timing out commands
 			if(updateDurationValues){
 				updateDurationValues = false;
 				end_time_ = std::chrono::steady_clock::now() +
 					std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(customDuration));
 			}
 			checkDurationExpiry();
-	} else if (state_ == State::CONTINUOUS)
+	} else if (state_ == State::CONTINUOUS) //burn time until we get forced out of CONTINUOUS by a stop command
 	{
 		prev_state_ = state_;
-		//logging here? maybe
 	}
 	
 }
@@ -90,7 +83,7 @@ void VelocityProvider::setState(State state){
 	state_ = state;
 }
 
-void VelocityProvider::forwardForDuration(float seconds, float linear){
+void VelocityProvider::forwardForDuration(float seconds, float linear){ //drive for duration
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setVel(linear);
@@ -98,7 +91,7 @@ void VelocityProvider::forwardForDuration(float seconds, float linear){
 	updateDurationValues = true;
 }
 
-void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
+void VelocityProvider::driveForDuration(float seconds, float lin, float rot){ // drive and turn for duration
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	customDuration = seconds;
@@ -108,7 +101,7 @@ void VelocityProvider::driveForDuration(float seconds, float lin, float rot){
 	updateDurationValues = true;
 }
 
-void VelocityProvider::driveContinuous(float lin){
+void VelocityProvider::driveContinuous(float lin){ // drive continuously -higher precision since the duration bits are freed
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::CONTINUOUS;
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(lin,0.0f);
@@ -116,7 +109,7 @@ void VelocityProvider::driveContinuous(float lin){
 	setRot(adjustedRot);
 }
 
-void VelocityProvider::turnContinuous(float rot){
+void VelocityProvider::turnContinuous(float rot){ // turn continuously - higher precision since the duration bits are freed
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::CONTINUOUS;
 	auto[adjustedLin, adjustedRot] = adjustLinAndRot(0.0f, rot);
@@ -124,7 +117,7 @@ void VelocityProvider::turnContinuous(float rot){
 	setRot(adjustedRot);
 }
 
-std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){
+std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot){ // adjust linear and rotational to fit within max combined limits
 	if(lin+std::fabs(rot)<100.0f){
 		return {lin,rot};
 	}
@@ -135,7 +128,7 @@ std::tuple<float, float> VelocityProvider::adjustLinAndRot(float lin, float rot)
 	return {lin,rot};
 }
 
-void VelocityProvider::turnForDuration(float seconds, float rotational){
+void VelocityProvider::turnForDuration(float seconds, float rotational){ // turn for duration
 	std::lock_guard<std::recursive_mutex> lk(remu_);
 	state_ = State::DURATION;
 	setRot(rotational);
@@ -153,8 +146,7 @@ bool VelocityProvider::getEnableDriving(){
 	return enableDriving;	
 }
 
-//no mutex because this is inner fucntion
-void VelocityProvider::updatePrevValues(){
+void VelocityProvider::updatePrevValues(){  //unused...
 	//only used as helper function. If called from other file on its own, add recursive mutex
 	prev_angular_z_ = angular_z_;
 	prev_linear_x_ = linear_x_;
